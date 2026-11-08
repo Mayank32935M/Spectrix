@@ -25,7 +25,31 @@ export async function createCase(data: {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error('Failed to create case');
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Failed to create case');
+  }
+  return res.json();
+}
+
+export async function updateCase(
+  caseId: string,
+  data: {
+    title?: string;
+    description?: string;
+    examiner_name?: string;
+    status?: string;
+  }
+): Promise<Case> {
+  const res = await fetch(`${API_BASE}/cases/${caseId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Failed to update case');
+  }
   return res.json();
 }
 
