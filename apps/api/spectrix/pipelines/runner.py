@@ -10,6 +10,9 @@ from spectrix.pipelines.metadata_exif import MetadataInspectionPipeline
 from spectrix.pipelines.noise_prnu import NoisePRNUPipeline
 from spectrix.pipelines.copymove import CopyMovePipeline
 from spectrix.pipelines.fft_frequency import FFTFrequencyPipeline
+from spectrix.pipelines.video_container import VideoContainerPipeline
+from spectrix.pipelines.video_temporal import VideoTemporalPipeline
+from spectrix.pipelines.video_viseme import VideoVisemePipeline
 
 # Registry of available analysis pipelines
 PIPELINE_REGISTRY = {
@@ -18,6 +21,9 @@ PIPELINE_REGISTRY = {
     "noise_analysis": NoisePRNUPipeline(),
     "copymove_detection": CopyMovePipeline(),
     "fft_frequency": FFTFrequencyPipeline(),
+    "video_container_analysis": VideoContainerPipeline(),
+    "video_temporal_cadence": VideoTemporalPipeline(),
+    "video_viseme_sync": VideoVisemePipeline(),
 }
 
 def execute_analysis_job(job_id: str, db: Session):
@@ -44,7 +50,17 @@ def execute_analysis_job(job_id: str, db: Session):
     job.log_messages = [f"Starting forensic examination for Evidence {evidence.evidence_id}"]
     db.commit()
 
-    selected_pipelines = job.pipelines or list(PIPELINE_REGISTRY.keys())
+    if job.pipelines and len(job.pipelines) > 0:
+        selected_pipelines = job.pipelines
+    else:
+        # Default pipelines by modality
+        if evidence.modality == "video":
+            selected_pipelines = ["video_container_analysis", "video_temporal_cadence", "video_viseme_sync"]
+        elif evidence.modality == "audio":
+            selected_pipelines = []
+        else:
+            selected_pipelines = ["ela_compression", "metadata_inspection", "noise_analysis", "copymove_detection", "fft_frequency"]
+
     total_pipelines = len(selected_pipelines)
     emitted_findings = []
 
@@ -52,6 +68,10 @@ def execute_analysis_job(job_id: str, db: Session):
         pipeline = PIPELINE_REGISTRY.get(pipe_name)
         if not pipeline:
             job.log_messages.append(f"Pipeline '{pipe_name}' not available in registry. Skipping.")
+            continue
+
+        if pipeline.modality != evidence.modality and pipeline.modality != "all":
+            job.log_messages.append(f"Pipeline '{pipe_name}' modality '{pipeline.modality}' does not match evidence modality '{evidence.modality}'. Skipping.")
             continue
 
         try:
