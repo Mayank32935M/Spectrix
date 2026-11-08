@@ -11,7 +11,7 @@
 
 **An enterprise-grade, local-first digital forensics workstation suite engineered for neural deepfake detection, cross-modal signal tampering analysis, cryptographic chain-of-custody tracking, and court-admissible affidavit generation.**
 
-[Key Workspaces](#workspaces-gallery) • [Forensic Verdict Engine](#final-forensic-verdict--assessment-engine) • [Architecture](#forensic-architecture) • [Getting Started](#getting-started) • [Security & Admissibility](#forensic-integrity--admissibility-principles)
+[Core Workspaces](#core-workspaces) • [Forensic Verdict Engine](#final-forensic-verdict--assessment-engine) • [Architecture](#forensic-architecture) • [Getting Started](#getting-started) • [Security & Admissibility](#forensic-integrity--admissibility-principles)
 
 </div>
 
@@ -25,39 +25,25 @@ Unlike black-box AI detectors that output uncalibrated percentages, SPECTRIX imp
 
 ---
 
-## Workspaces Gallery
+## Core Workspaces
 
-*(All visuals captured directly from the live SPECTRIX workstation build)*
+1. **Evidence Intelligence Canvas**  
+   Graph-based investigative environment correlating cross-modal evidence items, C2PA provenance hops, forensic finding clusters, and facial cosine similarity links powered by a responsive Cytoscape.js force-directed topology.
 
-### 1. Evidence Intelligence Canvas
-Graph-based investigative environment correlating cross-modal evidence items, C2PA provenance hops, forensic finding clusters, and facial cosine similarity links powered by a responsive Cytoscape.js force-directed topology.
+2. **Image Examination Studio**  
+   Spatial and spectral pixel forensics featuring Error Level Analysis (ELA) with dynamic quality scaling, PRNU sensor noise residual matching, 2D-FFT radial lattice magnitude spectrum, copy-move clone-block matching, 5x pixel loupe, channel isolation, and the multi-pillar Final Forensic Assessment panel.
 
-![Evidence Intelligence Canvas](docs/assets/canvas.png)
+3. **Video Examination Studio**  
+   Frame-accurate SMPTE playback (29.97 fps) with J/K/L keyboard transport controls, multi-track timeline, 68-point facial landmark mesh with mandibular shearing tracking, SyncNet audio-visual viseme desynchronization, and ISOBMFF container atom parser.
 
-### 2. Image Examination Studio
-Spatial and spectral pixel forensics featuring Error Level Analysis (ELA) with dynamic quality scaling, PRNU sensor noise residual matching, 2D-FFT radial lattice magnitude spectrum, copy-move clone-block matching, 5x pixel loupe, channel isolation, and the multi-pillar Final Forensic Assessment panel.
+4. **Audio Examination Studio**  
+   Synchronous dual-channel vector waveforms (CH-L/CH-R), high-resolution STFT spectrograms (0–24 kHz), acoustic splice phase-angle discontinuity detection, synthetic vocoder harmonic striation analysis, and ambient noise floor elevation checks.
 
-![Image Examination Studio](docs/assets/image-studio.png)
+5. **Evidence Vault & Batch Intake**  
+   Multi-file drag-and-drop batch ingestion with client-side SHA-256 precomputation, case isolation boundaries, metadata extraction, and automatic modality routing to specialized studios.
 
-### 3. Video Examination Studio
-Frame-accurate SMPTE playback (29.97 fps) with J/K/L keyboard transport controls, multi-track timeline, 68-point facial landmark mesh with mandibular shearing tracking, SyncNet audio-visual viseme desynchronization, and ISOBMFF container atom parser.
-
-![Video Examination Studio](docs/assets/video-studio.png)
-
-### 4. Audio Examination Studio
-Synchronous dual-channel vector waveforms (CH-L/CH-R), high-resolution STFT spectrograms (0–24 kHz), acoustic splice phase-angle discontinuity detection, synthetic vocoder harmonic striation analysis, and ambient noise floor elevation checks.
-
-![Audio Examination Studio](docs/assets/audio-studio.png)
-
-### 5. Evidence Vault & Batch Intake
-Multi-file drag-and-drop batch ingestion with client-side SHA-256 precomputation, case isolation boundaries, metadata extraction, and automatic modality routing to specialized studios.
-
-![Evidence Vault](docs/assets/evidence-vault.png)
-
-### 6. Legal Affidavit & Telemetry Dossier Export
-Court-admissible evidentiary export compliant with ISO/IEC 27037:2012 standards. Emits structured CommonMark affidavits and raw forensic telemetry JSON containing hardware identifiers, UTC custody logs, and examiner credentials.
-
-![Affidavit Export](docs/assets/affidavit-modal.png)
+6. **Legal Affidavit & Telemetry Dossier Export**  
+   Court-admissible evidentiary export compliant with ISO/IEC 27037:2012 standards. Emits structured CommonMark affidavits and raw forensic telemetry JSON containing hardware identifiers, UTC custody logs, and examiner credentials.
 
 ---
 
@@ -258,8 +244,7 @@ SPECTRIX/
 │       │   ├── pipelines/      # ELA, PRNU, FFT, CopyMove, Video, Audio
 │       │   └── routers/        # REST APIs for cases, evidence, reports, copilot
 │       └── tests/              # 30 Comprehensive unit & integration tests
-├── docs/                       # Specifications, Contracts & Visual Assets
-│   ├── assets/                 # Workstation studio screenshots
+├── docs/                       # Specifications, Architectural & Evidence Contracts
 │   ├── ARCHITECTURE.md
 │   ├── API_CONTRACTS.md
 │   ├── EVIDENCE_MODEL.md
