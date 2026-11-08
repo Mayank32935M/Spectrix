@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Header } from './components/common/Header';
 import { UniversalInspector } from './components/common/UniversalInspector';
 import { AffidavitExportModal } from './components/common/AffidavitExportModal';
+import { ForensicCopilotModal } from './components/common/ForensicCopilotModal';
 import { EvidenceCanvas } from './workspaces/EvidenceCanvas';
 import { ImageStudio } from './workspaces/ImageStudio';
 import { VideoStudio } from './workspaces/VideoStudio';
@@ -25,6 +26,7 @@ export const App: React.FC = () => {
   const [findings, setFindings] = useState<ForensicFinding[]>([]);
   const [selectedFindingId, setSelectedFindingId] = useState<string | null>(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isCopilotOpen, setIsCopilotOpen] = useState(false);
   const [_loading, setLoading] = useState(true);
 
   // Initialize Case and Evidence
@@ -133,6 +135,7 @@ export const App: React.FC = () => {
         activeCase={activeCase}
         activeEvidence={activeEvidence}
         onOpenExportModal={() => setIsExportModalOpen(true)}
+        onOpenCopilot={() => setIsCopilotOpen(true)}
       />
 
       {/* Main Workspace Stage + Contextual Inspector */}
@@ -202,6 +205,16 @@ export const App: React.FC = () => {
         activeCase={activeCase}
         activeEvidence={activeEvidence}
         findings={findings}
+      />
+
+      {/* Forensic Copilot Modal */}
+      <ForensicCopilotModal
+        isOpen={isCopilotOpen}
+        onClose={() => setIsCopilotOpen(false)}
+        activeCase={activeCase}
+        activeEvidence={activeEvidence}
+        onSelectEvidence={handleSelectEvidence}
+        onSelectFinding={setSelectedFindingId}
       />
     </div>
   );

@@ -130,3 +130,52 @@ export async function deleteAnnotation(evidenceId: string, annotationId: string)
   if (!res.ok) throw new Error('Failed to delete annotation');
 }
 
+export interface CopilotResponse {
+  query: string;
+  case_id: string;
+  answer: string;
+  grounding_references: Array<{
+    reference_type: string;
+    reference_id: string;
+    label: string;
+    modality?: string;
+    timestamp_or_frame?: string;
+  }>;
+  observations: string[];
+  inferences: string[];
+  forensic_limitations: string[];
+}
+
+export async function queryCopilot(caseId: string, query: string, evidenceId?: string): Promise<CopilotResponse> {
+  const res = await fetch(`${API_BASE}/cases/${caseId}/copilot/query`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query, evidence_id: evidenceId }),
+  });
+  if (!res.ok) throw new Error('Failed to query Forensic Copilot');
+  return res.json();
+}
+
+export interface CaseReportResponse {
+  case_id: string;
+  case_number: string;
+  title: string;
+  examiner_name: string;
+  generated_at: string;
+  total_evidence_assets: number;
+  total_findings: number;
+  total_custody_events: number;
+  total_annotations: number;
+  evidence_inventory: any[];
+  findings_by_modality: Record<string, any[]>;
+  custody_ledger: any[];
+  affidavit_markdown: string;
+}
+
+export async function fetchCaseReport(caseId: string): Promise<CaseReportResponse> {
+  const res = await fetch(`${API_BASE}/cases/${caseId}/reports`);
+  if (!res.ok) throw new Error('Failed to generate case forensic report');
+  return res.json();
+}
+
+

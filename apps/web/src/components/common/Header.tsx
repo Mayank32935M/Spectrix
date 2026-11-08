@@ -6,7 +6,8 @@ import {
   Film, 
   AudioWaveform, 
   FileText, 
-  CheckCircle2 
+  CheckCircle2,
+  Sparkles
 } from 'lucide-react';
 import { Case, EvidenceAsset, ActiveWorkspace } from '../../types';
 
@@ -16,6 +17,7 @@ interface HeaderProps {
   activeCase: Case | null;
   activeEvidence: EvidenceAsset | null;
   onOpenExportModal: () => void;
+  onOpenCopilot: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -24,6 +26,7 @@ export const Header: React.FC<HeaderProps> = ({
   activeCase,
   activeEvidence,
   onOpenExportModal,
+  onOpenCopilot,
 }) => {
   return (
     <header className="h-12 border-b border-border-default bg-surface-panel px-3 flex items-center justify-between shrink-0 z-40 select-none">
@@ -149,6 +152,16 @@ export const Header: React.FC<HeaderProps> = ({
           <CheckCircle2 className="w-3 h-3 text-accent-mint" />
           <span>SYNCED</span>
         </div>
+
+        {/* Forensic Copilot Button */}
+        <button
+          onClick={onOpenCopilot}
+          className="h-7 px-2.5 rounded bg-surface-container hover:bg-surface-elevated border border-border-default hover:border-accent-cyan/50 text-content-primary text-xs font-sans font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+          title="Evidence-Grounded Forensic Copilot Assistant"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-accent-cyan" />
+          <span>Copilot</span>
+        </button>
 
         {/* Affidavit Export Button */}
         <button

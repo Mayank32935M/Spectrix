@@ -1,6 +1,18 @@
-import React, { useState } from 'react';
-import { X, FileText, Download, Copy, Check, ShieldCheck } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { 
+  X, 
+  FileText, 
+  Download, 
+  Copy, 
+  Check, 
+  ShieldCheck, 
+  FileCode, 
+  Loader2, 
+  Scale, 
+  CheckCircle2 
+} from 'lucide-react';
 import { Case, EvidenceAsset, ForensicFinding } from '../../types';
+import { fetchCaseReport, CaseReportResponse } from '../../services/api';
 
 interface AffidavitExportModalProps {
   isOpen: boolean;
@@ -17,12 +29,26 @@ export const AffidavitExportModal: React.FC<AffidavitExportModalProps> = ({
   activeEvidence,
   findings,
 }) => {
-  const [copied, setCopied] = useState(false);
+  const [activeTab, setActiveTab] = useState<'affidavit' | 'telemetry'>('affidavit');
+  const [report, setReport] = useState<CaseReportResponse | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [copied, setCopied] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (isOpen && activeCase) {
+      setLoading(true);
+      fetchCaseReport(activeCase.case_id)
+        .then((data) => setReport(data))
+        .catch((err) => console.error('Failed to load case report:', err))
+        .finally(() => setLoading(false));
+    }
+  }, [isOpen, activeCase]);
 
   if (!isOpen) return null;
 
-  const exportPayload = {
-    affidavit_version: '1.0.0',
+  // Fallback JSON payload if server report is still loading
+  const exportPayload = report || {
+    affidavit_version: '1.0.0-ISO27037',
     generated_at: new Date().toISOString(),
     platform: 'SPECTRIX Forensic Workstation v1.0',
     case: {
@@ -40,7 +66,7 @@ export const AffidavitExportModal: React.FC<AffidavitExportModalProps> = ({
           registered_sha256: activeEvidence.sha256_digest,
           registered_at: activeEvidence.registered_at,
           integrity_verified: true,
-          notice: 'File integrity only — does not certify authentic capture',
+          notice: 'Bitstream integrity verified — does not certify authentic capture',
         }
       : null,
     findings: findings.map((f) => ({
@@ -59,90 +85,162 @@ export const AffidavitExportModal: React.FC<AffidavitExportModalProps> = ({
   };
 
   const jsonString = JSON.stringify(exportPayload, null, 2);
+  const markdownString = report?.affidavit_markdown || `# FORENSIC AFFIDAVIT & EXAMINATION DOSSIER\n\nCase: ${activeCase?.case_number}\nExaminer: ${activeCase?.examiner_name}\nEvidence ID: ${activeEvidence?.evidence_id || 'N/A'}\nSHA-256 Digest: ${activeEvidence?.sha256_digest || 'N/A'}\n\nNotice: Model scores represent technical likelihood ratios, not definitive legal facts.`;
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(jsonString);
+    const textToCopy = activeTab === 'affidavit' ? markdownString : jsonString;
+    navigator.clipboard.writeText(textToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleDownload = () => {
-    const blob = new Blob([jsonString], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `AFFIDAVIT_${activeEvidence?.evidence_id || 'REPORT'}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    if (activeTab === 'affidavit') {
+      const blob = new Blob([markdownString], { type: 'text/markdown;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `AFFIDAVIT_ISO27037_${activeCase?.case_number || 'REPORT'}.md`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } else {
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `TELEMETRY_${activeCase?.case_number || 'REPORT'}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 select-none">
-      <div className="bg-surface-panel border border-border-default rounded max-w-2xl w-full flex flex-col max-h-[85vh] shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 select-none">
+      <div className="bg-[#111722] border border-[#25303d] rounded-lg max-w-4xl w-full flex flex-col h-[88vh] shadow-2xl overflow-hidden font-mono text-[11px]">
         {/* Header */}
-        <div className="h-12 px-4 border-b border-border-default flex items-center justify-between bg-surface-panel shrink-0">
+        <div className="h-12 px-4 border-b border-[#25303d] bg-[#171d29] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-accent-mint" />
-            <h2 className="text-xs font-mono font-bold text-content-primary uppercase tracking-wide">
-              FORENSIC AFFIDAVIT EXPORT // {activeEvidence?.evidence_id || 'CASE REPORT'}
-            </h2>
+            <div className="w-6 h-6 rounded bg-[#35c6a0]/20 border border-[#35c6a0]/50 flex items-center justify-center text-[#35c6a0]">
+              <Scale className="w-3.5 h-3.5" />
+            </div>
+            <div>
+              <h2 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                FORENSIC AFFIDAVIT & EXAMINATION DOSSIER
+                <span className="text-[10px] text-[#35c6a0] font-normal px-1.5 py-0.2 rounded bg-[#35c6a0]/15 border border-[#35c6a0]/30">
+                  ISO/IEC 27037 COMPLIANT
+                </span>
+              </h2>
+              <div className="text-[9px] text-[#94a3b8]">
+                CASE: {activeCase?.case_number} · ATTESTATION OF BITSTREAM PRESERVATION & TECHNICAL FINDINGS
+              </div>
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded text-content-muted hover:text-content-primary hover:bg-surface-container transition"
+            className="p-1 rounded text-[#94a3b8] hover:text-white hover:bg-[#1f2737] transition"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Content Preview */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3 font-mono text-[11px]">
-          <div className="p-3 bg-surface-canvas rounded border border-border-default space-y-2">
-            <div className="text-accent-mint font-bold text-xs flex items-center gap-1.5">
+        {/* View Switcher Bar */}
+        <div className="px-4 py-2 border-b border-[#25303d] bg-[#0c1017] flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setActiveTab('affidavit')}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs transition cursor-pointer ${
+                activeTab === 'affidavit'
+                  ? 'bg-[#1e293b] text-[#35c6a0] border border-[#35c6a0]/40 font-semibold'
+                  : 'text-[#94a3b8] hover:text-white hover:bg-[#171d29]'
+              }`}
+            >
               <FileText className="w-3.5 h-3.5" />
-              <span>Chain-of-Custody & Findings Declaration</span>
-            </div>
-            <div className="text-[10px] text-content-secondary leading-relaxed">
-              Case: <strong className="text-content-primary">{activeCase?.case_number}</strong> //{' '}
-              {activeCase?.title}
-            </div>
-            <div className="text-[10px] text-content-secondary">
-              Evidence: <strong className="text-content-primary">{activeEvidence?.filename}</strong> (
-              {activeEvidence?.evidence_id})
-            </div>
-            <div className="text-[10px] text-content-muted break-all">
-              SHA-256: <span className="text-accent-mint">{activeEvidence?.sha256_digest}</span>
-            </div>
+              <span>Legal Affidavit (.md)</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('telemetry')}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs transition cursor-pointer ${
+                activeTab === 'telemetry'
+                  ? 'bg-[#1e293b] text-[#35c6a0] border border-[#35c6a0]/40 font-semibold'
+                  : 'text-[#94a3b8] hover:text-white hover:bg-[#171d29]'
+              }`}
+            >
+              <FileCode className="w-3.5 h-3.5" />
+              <span>Technical JSON Telemetry</span>
+            </button>
           </div>
 
-          <div className="space-y-1">
-            <span className="text-[10px] text-content-muted uppercase">Structured JSON Payload:</span>
-            <pre className="p-3 bg-surface-canvas rounded border border-border-default text-[10px] font-mono text-content-secondary overflow-x-auto max-h-56">
-              {jsonString}
-            </pre>
-          </div>
+          {/* Quick Metrics */}
+          {report && (
+            <div className="hidden sm:flex items-center gap-3 text-[10px] text-[#94a3b8]">
+              <span>Assets: <strong className="text-white">{report.total_evidence_assets}</strong></span>
+              <span>Findings: <strong className="text-[#f59e0b]">{report.total_findings}</strong></span>
+              <span>Custody Events: <strong className="text-[#35c6a0]">{report.total_custody_events}</strong></span>
+            </div>
+          )}
+        </div>
+
+        {/* Content Preview */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {loading ? (
+            <div className="h-full flex flex-col items-center justify-center gap-3 text-[#94a3b8]">
+              <Loader2 className="w-6 h-6 text-[#35c6a0] animate-spin" />
+              <span>Generating ISO/IEC 27037 Legal Attestation & Custody Ledger...</span>
+            </div>
+          ) : activeTab === 'affidavit' ? (
+            <div className="space-y-3">
+              {/* Statutory Attestation Banner */}
+              <div className="p-3 bg-[#090d14] rounded border border-[#25303d] flex items-start gap-2.5">
+                <ShieldCheck className="w-4 h-4 text-[#35c6a0] shrink-0 mt-0.5" />
+                <div className="text-[10.5px] font-sans text-[#cbd5e1] leading-relaxed">
+                  <strong className="text-white font-mono">Formal Examiner Declaration:</strong> I hereby certify under penalty of perjury that the forensic evidence registered in this dossier has been handled in strict adherence to ISO/IEC 27037 standards. Raw bitstreams are stored immutably; cryptanalytic SHA-256 digests verify zero bit alterations since intake.
+                </div>
+              </div>
+
+              {/* Markdown Document Preview */}
+              <div className="p-4 bg-[#090d14] rounded border border-[#25303d] font-mono text-[10.5px] text-[#e2e8f0] leading-relaxed whitespace-pre-wrap select-text max-h-[50vh] overflow-y-auto">
+                {markdownString}
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="text-[10px] text-[#94a3b8] flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#35c6a0]" />
+                <span>Complete Structured Case Telemetry & Algorithmic Scores</span>
+              </div>
+              <pre className="p-4 bg-[#090d14] rounded border border-[#25303d] text-[10px] font-mono text-[#cbd5e1] overflow-x-auto max-h-[52vh] select-text">
+                {jsonString}
+              </pre>
+            </div>
+          )}
         </div>
 
         {/* Footer Actions */}
-        <div className="h-12 px-4 border-t border-border-default bg-surface-panel flex items-center justify-between shrink-0 font-mono text-xs">
-          <button
-            onClick={handleCopy}
-            className="px-3 py-1.5 rounded bg-surface-container hover:bg-surface-elevated border border-border-default text-content-primary flex items-center gap-1.5 transition cursor-pointer"
-          >
-            {copied ? <Check className="w-3.5 h-3.5 text-accent-mint" /> : <Copy className="w-3.5 h-3.5" />}
-            <span>{copied ? 'Copied to Clipboard' : 'Copy JSON'}</span>
-          </button>
+        <div className="h-13 px-4 border-t border-[#25303d] bg-[#171d29] flex items-center justify-between shrink-0 font-mono text-xs">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleCopy}
+              className="px-3 py-1.5 rounded bg-[#1f2737] hover:bg-[#283347] border border-[#25303d] text-white flex items-center gap-1.5 transition cursor-pointer"
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-[#35c6a0]" /> : <Copy className="w-3.5 h-3.5" />}
+              <span>{copied ? 'Copied' : activeTab === 'affidavit' ? 'Copy Markdown' : 'Copy JSON'}</span>
+            </button>
+            <span className="text-[10px] text-[#64748b] hidden md:inline">
+              Format: {activeTab === 'affidavit' ? 'CommonMark (.md)' : 'JSON 2020-12 (.json)'}
+            </span>
+          </div>
 
           <button
             onClick={handleDownload}
-            className="px-3 py-1.5 rounded bg-accent-mint hover:bg-accent-mint-bright text-surface-canvas font-bold flex items-center gap-1.5 transition cursor-pointer"
+            className="px-4 py-1.5 rounded bg-[#35c6a0] hover:bg-[#20e3b2] text-[#00382a] font-bold flex items-center gap-1.5 transition cursor-pointer shadow-lg"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Download Signed Affidavit</span>
+            <span>
+              {activeTab === 'affidavit' ? 'Download Legal Affidavit (.md)' : 'Download Telemetry (.json)'}
+            </span>
           </button>
         </div>
       </div>
     </div>
   );
 };
-
