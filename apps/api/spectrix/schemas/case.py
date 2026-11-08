@@ -8,6 +8,12 @@ class CaseCreate(BaseModel):
     description: Optional[str] = None
     examiner_name: str = Field("Dr. E. Vance")
 
+class CaseUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    examiner_name: Optional[str] = None
+    status: Optional[str] = None
+
 class CaseResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

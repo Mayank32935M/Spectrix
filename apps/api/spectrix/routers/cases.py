@@ -1,10 +1,11 @@
+from datetime import datetime
 import uuid
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from spectrix.core.database import get_db
 from spectrix.models.case import Case
-from spectrix.schemas.case import CaseCreate, CaseResponse
+from spectrix.schemas.case import CaseCreate, CaseUpdate, CaseResponse
 
 router = APIRouter(prefix="/cases", tags=["Cases"])
 
@@ -78,4 +79,46 @@ def get_case(case_id: str, db: Session = Depends(get_db)):
         evidence_count=len(c.evidence_items),
         findings_count=len(c.findings)
     )
+
+@router.patch("/{case_id}", response_model=CaseResponse)
+def update_case(case_id: str, payload: CaseUpdate, db: Session = Depends(get_db)):
+    c = db.query(Case).filter((Case.case_id == case_id) | (Case.case_number == case_id)).first()
+    if not c:
+        raise HTTPException(status_code=404, detail="Case not found")
+
+    if payload.examiner_name is not None:
+        stripped = payload.examiner_name.strip()
+        if not stripped:
+            raise HTTPException(status_code=400, detail="Examiner name cannot be empty or whitespace only")
+        c.examiner_name = stripped
+
+    if payload.title is not None:
+        stripped_title = payload.title.strip()
+        if not stripped_title:
+            raise HTTPException(status_code=400, detail="Case title cannot be empty or whitespace only")
+        c.title = stripped_title
+
+    if payload.description is not None:
+        c.description = payload.description
+
+    if payload.status is not None:
+        c.status = payload.status
+
+    c.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(c)
+
+    return CaseResponse(
+        case_id=c.case_id,
+        case_number=c.case_number,
+        title=c.title,
+        description=c.description,
+        examiner_name=c.examiner_name,
+        status=c.status,
+        created_at=c.created_at,
+        updated_at=c.updated_at,
+        evidence_count=len(c.evidence_items),
+        findings_count=len(c.findings)
+    )
+
 
