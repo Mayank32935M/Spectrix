@@ -340,3 +340,4 @@ export const EvidenceVaultModal: React.FC<EvidenceVaultModalProps> = ({
     </div>
   );
 };
+
