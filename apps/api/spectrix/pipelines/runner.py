@@ -13,6 +13,8 @@ from spectrix.pipelines.fft_frequency import FFTFrequencyPipeline
 from spectrix.pipelines.video_container import VideoContainerPipeline
 from spectrix.pipelines.video_temporal import VideoTemporalPipeline
 from spectrix.pipelines.video_viseme import VideoVisemePipeline
+from spectrix.pipelines.audio_spectral import AudioSpectralPipeline
+from spectrix.pipelines.audio_synthetic_voice import AudioSyntheticVoicePipeline
 
 # Registry of available analysis pipelines
 PIPELINE_REGISTRY = {
@@ -24,6 +26,8 @@ PIPELINE_REGISTRY = {
     "video_container_analysis": VideoContainerPipeline(),
     "video_temporal_cadence": VideoTemporalPipeline(),
     "video_viseme_sync": VideoVisemePipeline(),
+    "audio_spectral_analysis": AudioSpectralPipeline(),
+    "audio_synthetic_voice": AudioSyntheticVoicePipeline(),
 }
 
 def execute_analysis_job(job_id: str, db: Session):
@@ -57,7 +61,7 @@ def execute_analysis_job(job_id: str, db: Session):
         if evidence.modality == "video":
             selected_pipelines = ["video_container_analysis", "video_temporal_cadence", "video_viseme_sync"]
         elif evidence.modality == "audio":
-            selected_pipelines = []
+            selected_pipelines = ["audio_spectral_analysis", "audio_synthetic_voice"]
         else:
             selected_pipelines = ["ela_compression", "metadata_inspection", "noise_analysis", "copymove_detection", "fft_frequency"]
 
