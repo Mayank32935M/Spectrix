@@ -25,7 +25,12 @@ const STORAGE_KEY_CASE = 'spectrix_active_case_id';
 const STORAGE_KEY_EVIDENCE = 'spectrix_active_evidence_id';
 
 export const App: React.FC = () => {
-  const [workspace, setWorkspace] = useState<ActiveWorkspace>('image');
+  const [workspace, setWorkspace] = useState<ActiveWorkspace>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ws = params.get('workspace');
+    if (ws === 'canvas' || ws === 'image' || ws === 'video' || ws === 'audio') return ws;
+    return 'image';
+  });
   const [cases, setCases] = useState<Case[]>([]);
   const [activeCase, setActiveCase] = useState<Case | null>(null);
   const [evidenceList, setEvidenceList] = useState<EvidenceAsset[]>([]);
@@ -34,12 +39,20 @@ export const App: React.FC = () => {
   const [selectedFindingId, setSelectedFindingId] = useState<string | null>(null);
 
   // Modals
-  const [isCaseManagerOpen, setIsCaseManagerOpen] = useState(false);
-  const [isEvidenceVaultOpen, setIsEvidenceVaultOpen] = useState(false);
+  const [isCaseManagerOpen, setIsCaseManagerOpen] = useState(() => {
+    return new URLSearchParams(window.location.search).get('modal') === 'cases';
+  });
+  const [isEvidenceVaultOpen, setIsEvidenceVaultOpen] = useState(() => {
+    return new URLSearchParams(window.location.search).get('modal') === 'vault';
+  });
   const [isExaminerPromptOpen, setIsExaminerPromptOpen] = useState(false);
   const [isInitialExaminerPrompt, setIsInitialExaminerPrompt] = useState(false);
-  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-  const [isCopilotOpen, setIsCopilotOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(() => {
+    return new URLSearchParams(window.location.search).get('modal') === 'affidavit';
+  });
+  const [isCopilotOpen, setIsCopilotOpen] = useState(() => {
+    return new URLSearchParams(window.location.search).get('modal') === 'copilot';
+  });
   const [loading, setLoading] = useState(true);
 
   // Helper: Compute client SHA-256 for a file
@@ -127,8 +140,10 @@ export const App: React.FC = () => {
 
         setCases(loadedCases);
 
-        // Check stored case preference
-        const savedCaseId = localStorage.getItem(STORAGE_KEY_CASE);
+        // Check stored case preference or query param
+        const qParams = new URLSearchParams(window.location.search);
+        const qCaseId = qParams.get('case_id');
+        const savedCaseId = qCaseId || localStorage.getItem(STORAGE_KEY_CASE);
         const matchedCase = loadedCases.find((c) => c.case_id === savedCaseId) || loadedCases[0];
         setActiveCase(matchedCase);
 
@@ -137,13 +152,17 @@ export const App: React.FC = () => {
         setEvidenceList(evList);
 
         if (evList.length > 0) {
-          const savedEvId = localStorage.getItem(STORAGE_KEY_EVIDENCE);
+          const qEvId = qParams.get('evidence_id');
+          const savedEvId = qEvId || localStorage.getItem(STORAGE_KEY_EVIDENCE);
           const matchedEv = evList.find((e) => e.evidence_id === savedEvId) || evList[0];
           setActiveEvidence(matchedEv);
 
-          if (matchedEv.modality === 'image') setWorkspace('image');
-          else if (matchedEv.modality === 'video') setWorkspace('video');
-          else if (matchedEv.modality === 'audio') setWorkspace('audio');
+          // If workspace wasn't explicitly passed in URL, match modality
+          if (!qParams.get('workspace')) {
+            if (matchedEv.modality === 'image') setWorkspace('image');
+            else if (matchedEv.modality === 'video') setWorkspace('video');
+            else if (matchedEv.modality === 'audio') setWorkspace('audio');
+          }
 
           const fList = await fetchFindings(matchedCase.case_id, matchedEv.evidence_id);
           setFindings(fList);
