@@ -60,3 +60,4 @@ jobs:
 
       - name: Typecheck & Build Web Application
         run: pnpm --filter @spectrix/web build
+

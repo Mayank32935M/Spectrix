@@ -36,3 +36,4 @@ If you discover a security vulnerability, evidence-tampering flaw, or integrity 
    - Any proposed remediation or patches
 
 We aim to acknowledge receipt of vulnerability reports within **48 hours** and provide a timeline for resolution and coordinated disclosure.
+

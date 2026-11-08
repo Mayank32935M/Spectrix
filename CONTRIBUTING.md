@@ -99,3 +99,4 @@ We enforce the [Conventional Commits](https://www.conventionalcommits.org/) spec
 - `chore(deps)`: Upgrade packages or maintenance configurations
 
 Keep git commits granular and focused on a single change with descriptive messages.
+
