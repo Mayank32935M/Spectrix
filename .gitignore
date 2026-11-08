@@ -37,10 +37,8 @@ htmlcov/
 *.sqlite
 *.sqlite3
 data/
-storage/uploads/
-storage/derivatives/
-storage/thumbnails/
-storage/temp/
+storage/
+**/storage/
 
 # Large ML model weights
 models/*.pt

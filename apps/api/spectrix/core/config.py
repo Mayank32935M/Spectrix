@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     
     # Base paths
-    BASE_DIR: Path = Path(__file__).resolve().parent.parent.parent.parent
+    BASE_DIR: Path = Path(__file__).resolve().parents[4]
     STORAGE_VAULT_PATH: Path = BASE_DIR / "storage" / "uploads"
     DERIVATIVES_PATH: Path = BASE_DIR / "storage" / "derivatives"
     TEMP_PATH: Path = BASE_DIR / "storage" / "temp"
