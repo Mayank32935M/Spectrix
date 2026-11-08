@@ -1,14 +1,18 @@
 import React, { useState, useRef } from 'react';
-import { UploadCloud, Shield, AlertCircle, ArrowRight } from 'lucide-react';
+import { UploadCloud, Shield, AlertCircle, ArrowRight, FolderOpen } from 'lucide-react';
 
 interface EmptyUploadZoneProps {
   onFileUpload: (file: File, precomputedSha256: string) => Promise<void>;
   modalityFilter?: 'image' | 'video' | 'audio' | 'all';
+  onOpenEvidenceVault?: () => void;
+  caseEvidenceCount?: number;
 }
 
 export const EmptyUploadZone: React.FC<EmptyUploadZoneProps> = ({
   onFileUpload,
   modalityFilter = 'all',
+  onOpenEvidenceVault,
+  caseEvidenceCount = 0,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -24,16 +28,18 @@ export const EmptyUploadZone: React.FC<EmptyUploadZoneProps> = ({
     return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
   };
 
-  const processFile = async (file: File) => {
+  const processFiles = async (files: File[]) => {
     setError(null);
     setUploading(true);
-    setProgressText(`Computing SHA-256 digest for ${file.name}...`);
 
     try {
-      const sha256 = await calculateSha256(file);
-      setProgressText(`Registering into immutable vault with digest: ${sha256.substring(0, 16)}...`);
-      await onFileUpload(file, sha256);
-      setProgressText('Upload and registration complete.');
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        setProgressText(`Hashing & ingesting file ${i + 1}/${files.length}: ${file.name}...`);
+        const sha256 = await calculateSha256(file);
+        await onFileUpload(file, sha256);
+      }
+      setProgressText('All evidence assets registered.');
     } catch (err: any) {
       setError(err.message || 'Failed to ingest evidence');
     } finally {
@@ -54,15 +60,15 @@ export const EmptyUploadZone: React.FC<EmptyUploadZoneProps> = ({
     e.preventDefault();
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const file = e.dataTransfer.files[0];
-      await processFile(file);
+      const files = Array.from(e.dataTransfer.files);
+      await processFiles(files);
     }
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
-      await processFile(file);
+      const files = Array.from(e.target.files);
+      await processFiles(files);
     }
   };
 
@@ -84,16 +90,17 @@ export const EmptyUploadZone: React.FC<EmptyUploadZoneProps> = ({
 
         <div>
           <h2 className="text-base font-bold text-content-primary">
-            Ingest Forensic Evidence Asset
+            No Evidence Asset Loaded for Examination
           </h2>
           <p className="text-xs text-content-secondary mt-1 font-sans">
-            Drag and drop original evidence media here, or browse your local file system.
+            Drag and drop original evidence media here, select local files, or choose an existing asset from this case.
           </p>
         </div>
 
         <input
           ref={fileInputRef}
           type="file"
+          multiple
           onChange={handleFileChange}
           className="hidden"
           accept={
@@ -107,14 +114,26 @@ export const EmptyUploadZone: React.FC<EmptyUploadZoneProps> = ({
           }
         />
 
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-          className="px-4 py-2 rounded bg-accent-mint hover:bg-accent-mint-bright text-surface-canvas font-bold text-xs flex items-center gap-2 transition cursor-pointer disabled:opacity-50"
-        >
-          <span>Select Local Evidence File</span>
-          <ArrowRight className="w-3.5 h-3.5" />
-        </button>
+        <div className="flex items-center gap-2.5 flex-wrap justify-center">
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="px-4 py-2 rounded bg-accent-mint hover:bg-accent-mint-bright text-surface-canvas font-bold text-xs flex items-center gap-2 transition cursor-pointer disabled:opacity-50"
+          >
+            <span>Upload New Evidence</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+
+          {caseEvidenceCount > 0 && onOpenEvidenceVault && (
+            <button
+              onClick={onOpenEvidenceVault}
+              className="px-4 py-2 rounded bg-surface-container hover:bg-surface-elevated border border-border-default hover:border-accent-cyan/50 text-content-primary font-bold text-xs flex items-center gap-2 transition cursor-pointer"
+            >
+              <FolderOpen className="w-3.5 h-3.5 text-accent-cyan" />
+              <span>Browse Case Evidence ({caseEvidenceCount})</span>
+            </button>
+          )}
+        </div>
 
         {uploading && (
           <div className="w-full space-y-1.5 pt-2">
@@ -147,14 +166,14 @@ export const EmptyUploadZone: React.FC<EmptyUploadZoneProps> = ({
             <span className="text-content-secondary font-semibold uppercase block">Custody Protocol:</span>
             <div>• Real-time SHA-256 pre-calculation</div>
             <div>• Immutable storage vault protection</div>
-            <div>• C2PA manifest verification check</div>
+            <div>• ISO/IEC 27037 chain of custody</div>
           </div>
         </div>
 
         {/* Privacy & Local Processing Guarantee */}
         <div className="flex items-center gap-2 pt-2 text-[10.5px] font-mono text-accent-mint bg-accent-mint/5 px-3 py-1.5 rounded border border-accent-mint/20">
           <Shield className="w-3.5 h-3.5 shrink-0" />
-          <span>Local Processing Only — Evidence is never uploaded to external AI services</span>
+          <span>Local Processing Only — Raw bitstreams are stored immutably</span>
         </div>
       </div>
     </div>

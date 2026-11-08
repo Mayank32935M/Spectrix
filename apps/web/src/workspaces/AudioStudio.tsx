@@ -36,6 +36,8 @@ interface AudioStudioProps {
   onSelectFinding: (findingId: string) => void;
   onUploadEvidence: (file: File, precomputedSha256: string) => Promise<void>;
   onTriggerAnalysis: (pipelines: string[]) => Promise<void>;
+  onOpenEvidenceVault?: () => void;
+  caseEvidenceCount?: number;
 }
 
 export const AudioStudio: React.FC<AudioStudioProps> = ({
@@ -46,6 +48,8 @@ export const AudioStudio: React.FC<AudioStudioProps> = ({
   onSelectFinding,
   onUploadEvidence,
   onTriggerAnalysis,
+  onOpenEvidenceVault,
+  caseEvidenceCount = 0,
 }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const waveformRef = useRef<HTMLDivElement>(null);
@@ -254,6 +258,8 @@ export const AudioStudio: React.FC<AudioStudioProps> = ({
       <EmptyUploadZone
         onFileUpload={onUploadEvidence}
         modalityFilter="audio"
+        onOpenEvidenceVault={onOpenEvidenceVault}
+        caseEvidenceCount={caseEvidenceCount}
       />
     );
   }

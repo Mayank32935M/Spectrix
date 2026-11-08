@@ -25,6 +25,8 @@ interface ImageStudioProps {
   onSelectFinding: (findingId: string) => void;
   onUploadEvidence: (file: File, precomputedSha256: string) => Promise<void>;
   onTriggerAnalysis: (pipelines: string[]) => Promise<void>;
+  onOpenEvidenceVault?: () => void;
+  caseEvidenceCount?: number;
 }
 
 export const ImageStudio: React.FC<ImageStudioProps> = ({
@@ -35,6 +37,8 @@ export const ImageStudio: React.FC<ImageStudioProps> = ({
   onSelectFinding,
   onUploadEvidence,
   onTriggerAnalysis,
+  onOpenEvidenceVault,
+  caseEvidenceCount = 0,
 }) => {
   const [zoom, setZoom] = useState(100);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -211,6 +215,8 @@ export const ImageStudio: React.FC<ImageStudioProps> = ({
       <EmptyUploadZone
         onFileUpload={onUploadEvidence}
         modalityFilter="image"
+        onOpenEvidenceVault={onOpenEvidenceVault}
+        caseEvidenceCount={caseEvidenceCount}
       />
     );
   }

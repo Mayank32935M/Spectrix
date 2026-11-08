@@ -36,6 +36,8 @@ interface VideoStudioProps {
   onSelectFinding: (findingId: string) => void;
   onUploadEvidence: (file: File, precomputedSha256: string) => Promise<void>;
   onTriggerAnalysis: (pipelines: string[]) => Promise<void>;
+  onOpenEvidenceVault?: () => void;
+  caseEvidenceCount?: number;
 }
 
 export const VideoStudio: React.FC<VideoStudioProps> = ({
@@ -46,6 +48,8 @@ export const VideoStudio: React.FC<VideoStudioProps> = ({
   onSelectFinding,
   onUploadEvidence,
   onTriggerAnalysis,
+  onOpenEvidenceVault,
+  caseEvidenceCount = 0,
 }) => {
   // Video element and playback state
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -273,6 +277,8 @@ export const VideoStudio: React.FC<VideoStudioProps> = ({
       <EmptyUploadZone
         onFileUpload={onUploadEvidence}
         modalityFilter="video"
+        onOpenEvidenceVault={onOpenEvidenceVault}
+        caseEvidenceCount={caseEvidenceCount}
       />
     );
   }
