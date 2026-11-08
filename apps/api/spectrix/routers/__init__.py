@@ -1,4 +1,4 @@
-from spectrix.routers import health, cases, evidence, jobs, findings, graph, annotations
+from spectrix.routers import health, cases, evidence, jobs, findings, graph, annotations, copilot, reports
 
-__all__ = ["health", "cases", "evidence", "jobs", "findings", "graph", "annotations"]
+__all__ = ["health", "cases", "evidence", "jobs", "findings", "graph", "annotations", "copilot", "reports"]
 
