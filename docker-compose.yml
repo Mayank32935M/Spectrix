@@ -1,0 +1,47 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://spectrix:spectrix_dev@postgres:5432/spectrix_db
+      - REDIS_URL=redis://redis:6379/0
+      - STORAGE_VAULT_PATH=/data/storage/uploads
+      - DERIVATIVES_PATH=/data/storage/derivatives
+    volumes:
+      - evidence_vault:/data/storage
+    depends_on:
+      - postgres
+      - redis
+
+  web:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.web
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=spectrix
+      - POSTGRES_PASSWORD=spectrix_dev
+      - POSTGRES_DB=spectrix_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+  evidence_vault:
+  postgres_data:
+

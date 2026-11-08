@@ -1,0 +1,19 @@
+{
+  "name": "spectrix",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SPECTRIX — Multimodal Digital Forensics & Evidence Intelligence Platform",
+  "scripts": {
+    "dev:web": "pnpm --filter @spectrix/web dev",
+    "build:web": "pnpm --filter @spectrix/web build",
+    "lint:web": "pnpm --filter @spectrix/web lint"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}
