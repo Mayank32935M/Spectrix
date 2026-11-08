@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Header } from './components/common/Header';
 import { UniversalInspector } from './components/common/UniversalInspector';
 import { AffidavitExportModal } from './components/common/AffidavitExportModal';
 import { ForensicCopilotModal } from './components/common/ForensicCopilotModal';
+import { CaseManagerModal } from './components/common/CaseManagerModal';
+import { ExaminerPromptModal } from './components/common/ExaminerPromptModal';
+import { EvidenceVaultModal } from './components/common/EvidenceVaultModal';
 import { EvidenceCanvas } from './workspaces/EvidenceCanvas';
 import { ImageStudio } from './workspaces/ImageStudio';
 import { VideoStudio } from './workspaces/VideoStudio';
@@ -16,20 +19,97 @@ import {
   triggerAnalysis, 
   fetchFindings 
 } from './services/api';
+import { Loader2 } from 'lucide-react';
+
+const STORAGE_KEY_CASE = 'spectrix_active_case_id';
+const STORAGE_KEY_EVIDENCE = 'spectrix_active_evidence_id';
 
 export const App: React.FC = () => {
   const [workspace, setWorkspace] = useState<ActiveWorkspace>('image');
-  const [_cases, setCases] = useState<Case[]>([]);
+  const [cases, setCases] = useState<Case[]>([]);
   const [activeCase, setActiveCase] = useState<Case | null>(null);
-  const [_evidenceList, setEvidenceList] = useState<EvidenceAsset[]>([]);
+  const [evidenceList, setEvidenceList] = useState<EvidenceAsset[]>([]);
   const [activeEvidence, setActiveEvidence] = useState<EvidenceAsset | null>(null);
   const [findings, setFindings] = useState<ForensicFinding[]>([]);
   const [selectedFindingId, setSelectedFindingId] = useState<string | null>(null);
+
+  // Modals
+  const [isCaseManagerOpen, setIsCaseManagerOpen] = useState(false);
+  const [isEvidenceVaultOpen, setIsEvidenceVaultOpen] = useState(false);
+  const [isExaminerPromptOpen, setIsExaminerPromptOpen] = useState(false);
+  const [isInitialExaminerPrompt, setIsInitialExaminerPrompt] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isCopilotOpen, setIsCopilotOpen] = useState(false);
-  const [_loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
-  // Initialize Case and Evidence
+  // Helper: Compute client SHA-256 for a file
+  const calculateSha256 = async (file: File): Promise<string> => {
+    const arrayBuffer = await file.arrayBuffer();
+    const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+  };
+
+  // Select an evidence asset and load its findings & workspace
+  const handleSelectEvidenceAsset = useCallback(async (ev: EvidenceAsset) => {
+    if (!activeCase) return;
+    setActiveEvidence(ev);
+    localStorage.setItem(STORAGE_KEY_EVIDENCE, ev.evidence_id);
+
+    // Switch workspace to match modality
+    if (ev.modality === 'image') setWorkspace('image');
+    else if (ev.modality === 'video') setWorkspace('video');
+    else if (ev.modality === 'audio') setWorkspace('audio');
+
+    try {
+      const fList = await fetchFindings(activeCase.case_id, ev.evidence_id);
+      setFindings(fList);
+      if (fList.length > 0) {
+        setSelectedFindingId(fList[0].finding_id);
+      } else {
+        setSelectedFindingId(null);
+      }
+    } catch (e) {
+      console.error('Failed to load findings for selected evidence:', e);
+      setFindings([]);
+    }
+  }, [activeCase]);
+
+  // Switch Active Case with strict data isolation
+  const handleSelectCase = useCallback(async (selectedCase: Case) => {
+    setActiveCase(selectedCase);
+    localStorage.setItem(STORAGE_KEY_CASE, selectedCase.case_id);
+
+    // Strict Case Isolation: Clear out prior case data
+    setActiveEvidence(null);
+    setFindings([]);
+    setSelectedFindingId(null);
+    localStorage.removeItem(STORAGE_KEY_EVIDENCE);
+
+    try {
+      const evList = await fetchEvidence(selectedCase.case_id);
+      setEvidenceList(evList);
+
+      if (evList.length > 0) {
+        // Pick first asset of the new case
+        await handleSelectEvidenceAsset(evList[0]);
+      } else {
+        setActiveEvidence(null);
+        setFindings([]);
+      }
+    } catch (err) {
+      console.error('Failed to load evidence for selected case:', err);
+      setEvidenceList([]);
+    }
+
+    // Check if examiner identity is assigned
+    if (!selectedCase.examiner_name || selectedCase.examiner_name === 'Forensic Analyst') {
+      setIsInitialExaminerPrompt(true);
+      setIsExaminerPromptOpen(true);
+    }
+  }, [handleSelectEvidenceAsset]);
+
+  // Initialize Case and Evidence with LocalStorage Persistence
   useEffect(() => {
     async function init() {
       try {
@@ -46,23 +126,26 @@ export const App: React.FC = () => {
         }
 
         setCases(loadedCases);
-        const currentCase = loadedCases[0];
-        setActiveCase(currentCase);
+
+        // Check stored case preference
+        const savedCaseId = localStorage.getItem(STORAGE_KEY_CASE);
+        const matchedCase = loadedCases.find((c) => c.case_id === savedCaseId) || loadedCases[0];
+        setActiveCase(matchedCase);
 
         // Load evidence for this case
-        const evList = await fetchEvidence(currentCase.case_id);
+        const evList = await fetchEvidence(matchedCase.case_id);
         setEvidenceList(evList);
 
         if (evList.length > 0) {
-          const firstEv = evList[0];
-          setActiveEvidence(firstEv);
+          const savedEvId = localStorage.getItem(STORAGE_KEY_EVIDENCE);
+          const matchedEv = evList.find((e) => e.evidence_id === savedEvId) || evList[0];
+          setActiveEvidence(matchedEv);
 
-          // Automatically switch workspace modality if applicable
-          if (firstEv.modality === 'image') setWorkspace('image');
-          else if (firstEv.modality === 'video') setWorkspace('video');
-          else if (firstEv.modality === 'audio') setWorkspace('audio');
+          if (matchedEv.modality === 'image') setWorkspace('image');
+          else if (matchedEv.modality === 'video') setWorkspace('video');
+          else if (matchedEv.modality === 'audio') setWorkspace('audio');
 
-          const fList = await fetchFindings(currentCase.case_id, firstEv.evidence_id);
+          const fList = await fetchFindings(matchedCase.case_id, matchedEv.evidence_id);
           setFindings(fList);
           if (fList.length > 0) {
             setSelectedFindingId(fList[0].finding_id);
@@ -78,20 +161,44 @@ export const App: React.FC = () => {
     init();
   }, []);
 
-  // Handle Evidence Upload
-  const handleFileUpload = async (file: File, precomputedSha256: string) => {
+  // Multi-File Upload & Ingestion
+  const handleBatchUpload = async (files: File[]) => {
     if (!activeCase) return;
 
+    const uploadedAssets: EvidenceAsset[] = [];
+    for (const file of files) {
+      const sha256 = await calculateSha256(file);
+      const newEvidence = await uploadEvidence(activeCase.case_id, file, sha256);
+      uploadedAssets.push(newEvidence);
+    }
+
+    if (uploadedAssets.length > 0) {
+      setEvidenceList((prev) => [...uploadedAssets, ...prev]);
+      const latest = uploadedAssets[0];
+      await handleSelectEvidenceAsset(latest);
+
+      // Refresh findings after analysis pipeline starts
+      setTimeout(async () => {
+        try {
+          const updatedFindings = await fetchFindings(activeCase.case_id, latest.evidence_id);
+          setFindings(updatedFindings);
+          if (updatedFindings.length > 0) {
+            setSelectedFindingId(updatedFindings[0].finding_id);
+          }
+        } catch (e) {
+          console.error('Failed to refresh findings after upload:', e);
+        }
+      }, 1500);
+    }
+  };
+
+  // Single file upload bridge
+  const handleSingleFileUpload = async (file: File, precomputedSha256: string) => {
+    if (!activeCase) return;
     const newEvidence = await uploadEvidence(activeCase.case_id, file, precomputedSha256);
     setEvidenceList((prev) => [newEvidence, ...prev]);
-    setActiveEvidence(newEvidence);
+    await handleSelectEvidenceAsset(newEvidence);
 
-    // Switch to corresponding studio
-    if (newEvidence.modality === 'image') setWorkspace('image');
-    else if (newEvidence.modality === 'video') setWorkspace('video');
-    else if (newEvidence.modality === 'audio') setWorkspace('audio');
-
-    // Poll for generated findings
     setTimeout(async () => {
       try {
         const updatedFindings = await fetchFindings(activeCase.case_id, newEvidence.evidence_id);
@@ -110,32 +217,57 @@ export const App: React.FC = () => {
     if (!activeEvidence || !activeCase) return;
     await triggerAnalysis(activeEvidence.evidence_id, pipelines);
 
-    // Refresh findings after short delay
     setTimeout(async () => {
       const updatedFindings = await fetchFindings(activeCase.case_id, activeEvidence.evidence_id);
       setFindings(updatedFindings);
     }, 1200);
   };
 
-  const handleSelectEvidence = async (evidenceId: string) => {
-    const ev = _evidenceList.find((e) => e.evidence_id === evidenceId) || null;
-    setActiveEvidence(ev);
-    if (ev && activeCase) {
-      const fList = await fetchFindings(activeCase.case_id, ev.evidence_id);
-      setFindings(fList);
+  const handleSelectEvidenceById = async (evidenceId: string) => {
+    const ev = evidenceList.find((e) => e.evidence_id === evidenceId) || null;
+    if (ev) {
+      await handleSelectEvidenceAsset(ev);
     }
   };
 
+  const handleCaseCreated = (newCase: Case) => {
+    setCases((prev) => [newCase, ...prev]);
+    handleSelectCase(newCase);
+  };
+
+  const handleCaseUpdated = (updatedCase: Case) => {
+    setCases((prev) => prev.map((c) => (c.case_id === updatedCase.case_id ? updatedCase : c)));
+    if (activeCase?.case_id === updatedCase.case_id) {
+      setActiveCase(updatedCase);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="h-screen w-screen bg-surface-canvas flex flex-col items-center justify-center gap-3 text-content-secondary font-mono">
+        <Loader2 className="w-8 h-8 text-accent-mint animate-spin" />
+        <span className="text-xs uppercase tracking-wider">Mounting Immutable Forensic Workstation...</span>
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen max-h-screen w-screen overflow-hidden flex flex-col bg-surface-canvas text-content-primary">
-      {/* Universal Header */}
+      {/* Universal Header with Case, Evidence Vault & Examiner controls */}
       <Header
         currentWorkspace={workspace}
         onSelectWorkspace={setWorkspace}
         activeCase={activeCase}
         activeEvidence={activeEvidence}
+        caseEvidenceCount={evidenceList.length}
         onOpenExportModal={() => setIsExportModalOpen(true)}
         onOpenCopilot={() => setIsCopilotOpen(true)}
+        onOpenCaseManager={() => setIsCaseManagerOpen(true)}
+        onOpenEvidenceVault={() => setIsEvidenceVaultOpen(true)}
+        onOpenExaminerModal={() => {
+          setIsInitialExaminerPrompt(false);
+          setIsExaminerPromptOpen(true);
+        }}
       />
 
       {/* Main Workspace Stage + Contextual Inspector */}
@@ -146,7 +278,7 @@ export const App: React.FC = () => {
             activeCase={activeCase}
             activeEvidence={activeEvidence}
             findings={findings}
-            onSelectEvidence={handleSelectEvidence}
+            onSelectEvidence={handleSelectEvidenceById}
             onSelectFinding={setSelectedFindingId}
             onNavigateWorkspace={setWorkspace}
           />
@@ -159,8 +291,10 @@ export const App: React.FC = () => {
             findings={findings}
             selectedFindingId={selectedFindingId}
             onSelectFinding={setSelectedFindingId}
-            onUploadEvidence={handleFileUpload}
+            onUploadEvidence={handleSingleFileUpload}
             onTriggerAnalysis={handleTriggerAnalysis}
+            onOpenEvidenceVault={() => setIsEvidenceVaultOpen(true)}
+            caseEvidenceCount={evidenceList.length}
           />
         )}
 
@@ -171,8 +305,10 @@ export const App: React.FC = () => {
             findings={findings}
             selectedFindingId={selectedFindingId}
             onSelectFinding={setSelectedFindingId}
-            onUploadEvidence={handleFileUpload}
+            onUploadEvidence={handleSingleFileUpload}
             onTriggerAnalysis={handleTriggerAnalysis}
+            onOpenEvidenceVault={() => setIsEvidenceVaultOpen(true)}
+            caseEvidenceCount={evidenceList.length}
           />
         )}
 
@@ -183,8 +319,10 @@ export const App: React.FC = () => {
             findings={findings}
             selectedFindingId={selectedFindingId}
             onSelectFinding={setSelectedFindingId}
-            onUploadEvidence={handleFileUpload}
+            onUploadEvidence={handleSingleFileUpload}
             onTriggerAnalysis={handleTriggerAnalysis}
+            onOpenEvidenceVault={() => setIsEvidenceVaultOpen(true)}
+            caseEvidenceCount={evidenceList.length}
           />
         )}
 
@@ -197,6 +335,37 @@ export const App: React.FC = () => {
           onSelectFinding={setSelectedFindingId}
         />
       </div>
+
+      {/* Case Manager Modal */}
+      <CaseManagerModal
+        isOpen={isCaseManagerOpen}
+        onClose={() => setIsCaseManagerOpen(false)}
+        cases={cases}
+        activeCase={activeCase}
+        onSelectCase={handleSelectCase}
+        onCaseCreated={handleCaseCreated}
+        onCaseUpdated={handleCaseUpdated}
+      />
+
+      {/* Evidence Vault & Intake Modal */}
+      <EvidenceVaultModal
+        isOpen={isEvidenceVaultOpen}
+        onClose={() => setIsEvidenceVaultOpen(false)}
+        activeCase={activeCase}
+        evidenceList={evidenceList}
+        activeEvidence={activeEvidence}
+        onSelectEvidence={handleSelectEvidenceAsset}
+        onUploadFiles={handleBatchUpload}
+      />
+
+      {/* Examiner Prompt Modal */}
+      <ExaminerPromptModal
+        isOpen={isExaminerPromptOpen}
+        onClose={() => setIsExaminerPromptOpen(false)}
+        activeCase={activeCase}
+        onExaminerSaved={handleCaseUpdated}
+        isInitialPrompt={isInitialExaminerPrompt}
+      />
 
       {/* Affidavit Export Modal */}
       <AffidavitExportModal
@@ -213,7 +382,7 @@ export const App: React.FC = () => {
         onClose={() => setIsCopilotOpen(false)}
         activeCase={activeCase}
         activeEvidence={activeEvidence}
-        onSelectEvidence={handleSelectEvidence}
+        onSelectEvidence={handleSelectEvidenceById}
         onSelectFinding={setSelectedFindingId}
       />
     </div>
