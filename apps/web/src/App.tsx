@@ -165,7 +165,10 @@ export const App: React.FC = () => {
             evidence={activeEvidence}
             activeCase={activeCase}
             findings={findings}
+            selectedFindingId={selectedFindingId}
+            onSelectFinding={setSelectedFindingId}
             onUploadEvidence={handleFileUpload}
+            onTriggerAnalysis={handleTriggerAnalysis}
           />
         )}
 
