@@ -8,12 +8,16 @@ from spectrix.models.evidence import EvidenceAsset, CustodyEvent
 from spectrix.pipelines.ela import ELAPipeline
 from spectrix.pipelines.metadata_exif import MetadataInspectionPipeline
 from spectrix.pipelines.noise_prnu import NoisePRNUPipeline
+from spectrix.pipelines.copymove import CopyMovePipeline
+from spectrix.pipelines.fft_frequency import FFTFrequencyPipeline
 
 # Registry of available analysis pipelines
 PIPELINE_REGISTRY = {
     "ela_compression": ELAPipeline(),
     "metadata_inspection": MetadataInspectionPipeline(),
     "noise_analysis": NoisePRNUPipeline(),
+    "copymove_detection": CopyMovePipeline(),
+    "fft_frequency": FFTFrequencyPipeline(),
 }
 
 def execute_analysis_job(job_id: str, db: Session):

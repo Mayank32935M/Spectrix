@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 
 from spectrix.core.config import settings
 from spectrix.core.database import engine, Base
-from spectrix.routers import health, cases, evidence, jobs, findings, graph
+from spectrix.routers import health, cases, evidence, jobs, findings, graph, annotations
 
 # Ensure tables exist
 Base.metadata.create_all(bind=engine)
@@ -33,6 +33,7 @@ app.include_router(evidence.router, prefix=settings.API_V1_STR)
 app.include_router(jobs.router, prefix=settings.API_V1_STR)
 app.include_router(findings.router, prefix=settings.API_V1_STR)
 app.include_router(graph.router, prefix=settings.API_V1_STR)
+app.include_router(annotations.router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 def root():

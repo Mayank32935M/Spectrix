@@ -5,9 +5,10 @@ from PIL import Image
 from spectrix.pipelines.ela import ELAPipeline
 from spectrix.pipelines.metadata_exif import MetadataInspectionPipeline
 from spectrix.pipelines.noise_prnu import NoisePRNUPipeline
+from spectrix.pipelines.copymove import CopyMovePipeline
+from spectrix.pipelines.fft_frequency import FFTFrequencyPipeline
 
 def test_ela_pipeline():
-    # Create temporary image
     with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
         tmp_path = Path(tmp.name)
         img = Image.new("RGB", (200, 200), color=(120, 150, 180))
@@ -52,3 +53,31 @@ def test_metadata_pipeline():
     finally:
         tmp_path.unlink(missing_ok=True)
 
+def test_copymove_pipeline():
+    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
+        tmp_path = Path(tmp.name)
+        img = Image.new("RGB", (150, 150), color=(80, 120, 160))
+        img.save(tmp_path, "JPEG")
+
+    try:
+        pipeline = CopyMovePipeline()
+        findings = pipeline.run(file_path=tmp_path, evidence_id="TEST-EV-04", case_id="CASE-04")
+        assert len(findings) >= 1
+        assert findings[0]["finding_type"] == "splicing_copymove"
+    finally:
+        tmp_path.unlink(missing_ok=True)
+
+def test_fft_pipeline():
+    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
+        tmp_path = Path(tmp.name)
+        img = Image.new("RGB", (256, 256), color=(100, 100, 100))
+        img.save(tmp_path, "JPEG")
+
+    try:
+        pipeline = FFTFrequencyPipeline()
+        findings = pipeline.run(file_path=tmp_path, evidence_id="TEST-EV-05", case_id="CASE-05")
+        assert len(findings) >= 1
+        assert findings[0]["finding_type"] == "frequency_domain_anomaly"
+        assert "score" in findings[0]
+    finally:
+        tmp_path.unlink(missing_ok=True)

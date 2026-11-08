@@ -24,6 +24,7 @@ class EvidenceAsset(Base):
     case = relationship("Case", back_populates="evidence_items")
     findings = relationship("ForensicFinding", back_populates="evidence", cascade="all, delete-orphan")
     custody_events = relationship("CustodyEvent", back_populates="evidence", cascade="all, delete-orphan")
+    annotations = relationship("EvidenceAnnotation", back_populates="evidence", cascade="all, delete-orphan")
 
 class CustodyEvent(Base):
     __tablename__ = "custody_events"

@@ -18,4 +18,5 @@ class Case(Base):
     # Relationships
     evidence_items = relationship("EvidenceAsset", back_populates="case", cascade="all, delete-orphan")
     findings = relationship("ForensicFinding", back_populates="case", cascade="all, delete-orphan")
+    annotations = relationship("EvidenceAnnotation", back_populates="case", cascade="all, delete-orphan")
 
