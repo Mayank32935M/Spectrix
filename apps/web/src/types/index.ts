@@ -104,5 +104,19 @@ export interface CustodyEvent {
   details: Record<string, any>;
 }
 
+export interface EvidenceAnnotation {
+  annotation_id: string;
+  case_id: string;
+  evidence_id: string;
+  x: number;
+  y: number;
+  width?: number;
+  height?: number;
+  label: string;
+  notes?: string;
+  created_by: string;
+  created_at: string;
+}
+
 export type ActiveWorkspace = 'canvas' | 'image' | 'video' | 'audio';
 

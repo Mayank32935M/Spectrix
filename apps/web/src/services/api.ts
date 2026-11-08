@@ -104,3 +104,29 @@ export async function fetchGraph(caseId: string): Promise<any> {
   return res.json();
 }
 
+export async function fetchAnnotations(evidenceId: string): Promise<any[]> {
+  const res = await fetch(`${API_BASE}/evidence/${evidenceId}/annotations`);
+  if (!res.ok) throw new Error('Failed to fetch annotations');
+  return res.json();
+}
+
+export async function createAnnotation(
+  evidenceId: string,
+  data: { x: number; y: number; width?: number; height?: number; label: string; notes?: string; created_by?: string }
+): Promise<any> {
+  const res = await fetch(`${API_BASE}/evidence/${evidenceId}/annotations`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Failed to create annotation');
+  return res.json();
+}
+
+export async function deleteAnnotation(evidenceId: string, annotationId: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/evidence/${evidenceId}/annotations/${annotationId}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error('Failed to delete annotation');
+}
+
