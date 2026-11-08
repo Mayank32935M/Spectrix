@@ -145,6 +145,7 @@ export const App: React.FC = () => {
             findings={findings}
             onSelectEvidence={handleSelectEvidence}
             onSelectFinding={setSelectedFindingId}
+            onNavigateWorkspace={setWorkspace}
           />
         )}
 
