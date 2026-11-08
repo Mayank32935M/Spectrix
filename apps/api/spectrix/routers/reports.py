@@ -7,6 +7,8 @@ from spectrix.models.case import Case
 from spectrix.models.evidence import EvidenceAsset, CustodyEvent
 from spectrix.models.finding import ForensicFinding
 from spectrix.models.annotation import EvidenceAnnotation
+from spectrix.models.assessment import EvidenceAssessment
+from spectrix.assessment.engine import VerdictEngine
 
 router = APIRouter(prefix="/cases/{case_id}/reports", tags=["Reports & Affidavits"])
 
@@ -74,6 +76,21 @@ def get_case_forensic_report(case_id: str, db: Session = Depends(get_db)):
             "details": c.details_json
         })
 
+    # Evaluate/Fetch Active Assessments for all evidence
+    assessments_data = []
+    for e in evidence_items:
+        asm = db.query(EvidenceAssessment).filter(
+            EvidenceAssessment.evidence_id == e.evidence_id,
+            EvidenceAssessment.status == "active"
+        ).first()
+        if not asm:
+            e_findings = [f for f in findings if f.evidence_id == e.evidence_id]
+            e_jobs = e.evidence_id  # fallback
+            asm = VerdictEngine.evaluate_evidence(e, e_findings, [], db)
+        assessments_data.append(asm)
+
+    case_assessment = VerdictEngine.evaluate_case(case.case_id, db)
+
     # Generate Markdown Affidavit Text
     md_lines = [
         "# SPECTRIX FORENSIC EXAMINATION REPORT & LEGAL AFFIDAVIT",
@@ -102,7 +119,39 @@ def get_case_forensic_report(case_id: str, db: Session = Depends(get_db)):
         "> 3. **Biometric Similarity ≠ Legal Identity**: Cosine embedding similarity between biometric clusters indicates facial/vocal feature correspondence only, and must not be construed as verified legal identity.",
         "",
         "---",
-        "## 3. SUMMARY OF FORENSIC FINDINGS",
+        "## 3. EVIDENCE-LEVEL FORENSIC VERDICTS & ASSESSMENTS",
+        "The following consolidated verdicts were produced by the SPECTRIX Assessment Engine (`spectrix-fusion-v1`) based on empirical findings, method reliability weighting, and cross-modal corroboration.",
+        "",
+        "| Evidence ID | Final Verdict | AI Generation Assessment | Manipulation Assessment | Authenticity Status | Policy |",
+        "|---|---|---|---|---|---|"
+    ])
+
+    for asm in assessments_data:
+        md_lines.append(
+            f"| `{asm.evidence_id}` | **{asm.verdict}** | `{asm.ai_generation_assessment}` | `{asm.manipulation_assessment}` | `{asm.authenticity_assessment}` | `{asm.fusion_policy_id}:v{asm.fusion_policy_version}` |"
+        )
+
+    md_lines.append("")
+    for asm in assessments_data:
+        md_lines.append(f"### Forensic Reasoning for Evidence `{asm.evidence_id}` (v{asm.assessment_version})")
+        md_lines.append(asm.explanation)
+        md_lines.append(f"- **Supporting Findings**: {len(asm.supporting_findings)} finding(s)")
+        md_lines.append(f"- **Conflicting / Dismissed Findings**: {len(asm.conflicting_findings)} finding(s)")
+        md_lines.append(f"- **Examinations Performed**: {', '.join(asm.examinations_performed) or 'None'}")
+        if asm.unavailable_or_failed_examinations:
+            md_lines.append(f"- **Unexamined / Skipped**: {', '.join(asm.unavailable_or_failed_examinations)}")
+        md_lines.append("")
+
+    md_lines.extend([
+        "---",
+        "## 4. CASE-LEVEL FORENSIC SYNTHESIS",
+        f"**Consolidated Conclusion**: `{case_assessment['overall_case_conclusion']}`",
+        f"{case_assessment['summary_statement']}",
+        "",
+        f"> *{case_assessment['provisional_disclaimer']}*",
+        "",
+        "---",
+        "## 5. SUMMARY OF DETAILED FORENSIC FINDINGS",
     ])
 
     for mod, f_list in findings_by_modality.items():
@@ -120,7 +169,7 @@ def get_case_forensic_report(case_id: str, db: Session = Depends(get_db)):
 
     md_lines.extend([
         "---",
-        "## 4. ANALYST OBSERVATIONS & ANNOTATION LOG",
+        "## 6. ANALYST OBSERVATIONS & ANNOTATION LOG",
     ])
     if annotations:
         for a in annotations:
@@ -131,7 +180,7 @@ def get_case_forensic_report(case_id: str, db: Session = Depends(get_db)):
     md_lines.extend([
         "",
         "---",
-        "## 5. EXAMINER DIGITAL ATTESTATION",
+        "## 7. EXAMINER DIGITAL ATTESTATION",
         f"I, **{case.examiner_name}**, certify under penalty of perjury that the forensic analyses, cryptographic bitstream verifications, and cross-modal correlation summaries documented in this report were executed in accordance with ISO/IEC 27037 standards for digital evidence handling.",
         "",
         f"**Digital Signature Hash**: `SHA256: {case.case_id}:{len(findings)}:{len(evidence_items)}:{now_utc.replace(' ', '_')}`",
@@ -153,5 +202,22 @@ def get_case_forensic_report(case_id: str, db: Session = Depends(get_db)):
         "evidence_inventory": evidence_inventory,
         "findings_by_modality": findings_by_modality,
         "custody_ledger": custody_log,
+        "evidence_assessments": [
+            {
+                "assessment_id": a.assessment_id,
+                "evidence_id": a.evidence_id,
+                "version": a.assessment_version,
+                "verdict": a.verdict,
+                "ai_generation": a.ai_generation_assessment,
+                "manipulation": a.manipulation_assessment,
+                "authenticity": a.authenticity_assessment,
+                "explanation": a.explanation,
+                "supporting_count": len(a.supporting_findings),
+                "conflicting_count": len(a.conflicting_findings),
+                "policy": f"{a.fusion_policy_id}:v{a.fusion_policy_version}"
+            }
+            for a in assessments_data
+        ],
+        "case_assessment": case_assessment,
         "affidavit_markdown": affidavit_markdown
     }

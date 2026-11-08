@@ -3,6 +3,7 @@ from spectrix.models.evidence import EvidenceAsset, CustodyEvent
 from spectrix.models.finding import ForensicFinding
 from spectrix.models.job import AnalysisJob
 from spectrix.models.annotation import EvidenceAnnotation
+from spectrix.models.assessment import EvidenceAssessment
 
-__all__ = ["Case", "EvidenceAsset", "CustodyEvent", "ForensicFinding", "AnalysisJob", "EvidenceAnnotation"]
+__all__ = ["Case", "EvidenceAsset", "CustodyEvent", "ForensicFinding", "AnalysisJob", "EvidenceAnnotation", "EvidenceAssessment"]
 
