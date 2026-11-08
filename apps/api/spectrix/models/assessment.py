@@ -42,3 +42,4 @@ class EvidenceAssessment(Base):
     # Relationships
     case = relationship("Case", back_populates="assessments")
     evidence = relationship("EvidenceAsset", back_populates="assessments")
+

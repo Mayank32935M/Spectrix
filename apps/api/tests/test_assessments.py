@@ -311,3 +311,4 @@ def test_case_level_assessment(db_session):
     assert case_eval["assessed_assets_count"] == 2
     assert "SYNTHETIC_CONTENT_DETECTED" in case_eval["overall_case_conclusion"] or "CASE_ASSESSMENT_PROVISIONAL" in case_eval["overall_case_conclusion"]
     assert len(case_eval["individual_assessments"]) == 2
+

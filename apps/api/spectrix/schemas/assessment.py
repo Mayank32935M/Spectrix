@@ -39,3 +39,4 @@ class CaseAssessmentResponse(BaseModel):
     conflicting_evidence: List[Dict[str, Any]] = []
     individual_assessments: List[Dict[str, Any]] = []
     provisional_disclaimer: str
+

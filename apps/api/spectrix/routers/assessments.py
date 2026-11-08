@@ -63,3 +63,4 @@ def get_case_assessment(case_id: str, db: Session = Depends(get_db)):
         return case_assessment
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
