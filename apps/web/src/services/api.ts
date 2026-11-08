@@ -202,4 +202,30 @@ export async function fetchCaseReport(caseId: string): Promise<CaseReportRespons
   return res.json();
 }
 
+export async function fetchEvidenceAssessment(evidenceId: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/evidence/${evidenceId}/assessment`);
+  if (!res.ok) throw new Error('Failed to fetch evidence assessment');
+  return res.json();
+}
+
+export async function reevaluateEvidenceAssessment(evidenceId: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/evidence/${evidenceId}/assessment`, {
+    method: 'POST',
+  });
+  if (!res.ok) throw new Error('Failed to re-evaluate evidence assessment');
+  return res.json();
+}
+
+export async function fetchAssessmentHistory(evidenceId: string): Promise<any[]> {
+  const res = await fetch(`${API_BASE}/evidence/${evidenceId}/assessment/history`);
+  if (!res.ok) throw new Error('Failed to fetch assessment history');
+  return res.json();
+}
+
+export async function fetchCaseAssessment(caseId: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/cases/${caseId}/assessment`);
+  if (!res.ok) throw new Error('Failed to fetch case-level assessment');
+  return res.json();
+}
+
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   ShieldCheck, 
   FileCode, 
@@ -10,8 +10,9 @@ import {
   FileEdit, 
   Info 
 } from 'lucide-react';
-import { EvidenceAsset, ForensicFinding, Case } from '../../types';
-import { verifyEvidenceIntegrity } from '../../services/api';
+import { EvidenceAsset, ForensicFinding, Case, EvidenceAssessment } from '../../types';
+import { verifyEvidenceIntegrity, fetchEvidenceAssessment, reevaluateEvidenceAssessment, fetchAssessmentHistory } from '../../services/api';
+import { ForensicAssessmentCard } from './ForensicAssessmentCard';
 
 interface UniversalInspectorProps {
   evidence: EvidenceAsset | null;
@@ -32,10 +33,51 @@ export const UniversalInspector: React.FC<UniversalInspectorProps> = ({
   const [copiedSha, setCopiedSha] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [verificationResult, setVerificationResult] = useState<string | null>(null);
+  const [assessment, setAssessment] = useState<EvidenceAssessment | null>(null);
+  const [assessmentLoading, setAssessmentLoading] = useState(false);
+  const [assessmentHistory, setAssessmentHistory] = useState<EvidenceAssessment[]>([]);
   const [analystNote, setAnalystNote] = useState(
     'Facial boundary displays high-frequency variance roll-off consistent with local diffusion inpainting. Corroboration across audio viseme channel recommended.'
   );
   const [noteSaved, setNoteSaved] = useState(false);
+
+  const loadAssessment = useCallback(async (evId: string) => {
+    setAssessmentLoading(true);
+    try {
+      const asm = await fetchEvidenceAssessment(evId);
+      setAssessment(asm);
+      const hist = await fetchAssessmentHistory(evId);
+      setAssessmentHistory(hist);
+    } catch (e) {
+      console.error('Failed to load assessment:', e);
+    } finally {
+      setAssessmentLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (evidence) {
+      loadAssessment(evidence.evidence_id);
+    } else {
+      setAssessment(null);
+      setAssessmentHistory([]);
+    }
+  }, [evidence, loadAssessment, findings]);
+
+  const handleReevaluate = async () => {
+    if (!evidence) return;
+    setAssessmentLoading(true);
+    try {
+      const updated = await reevaluateEvidenceAssessment(evidence.evidence_id);
+      setAssessment(updated);
+      const hist = await fetchAssessmentHistory(evidence.evidence_id);
+      setAssessmentHistory(hist);
+    } catch (e) {
+      console.error('Re-evaluation error:', e);
+    } finally {
+      setAssessmentLoading(false);
+    }
+  };
 
   const handleCopySha = (sha: string) => {
     navigator.clipboard.writeText(sha);
@@ -104,6 +146,15 @@ export const UniversalInspector: React.FC<UniversalInspectorProps> = ({
       <div className="flex-1 overflow-y-auto p-3 space-y-3.5 text-xs">
         {evidence ? (
           <>
+            {/* FINAL FORENSIC ASSESSMENT VERDICT PANEL */}
+            <ForensicAssessmentCard
+              assessment={assessment}
+              loading={assessmentLoading}
+              onReevaluate={handleReevaluate}
+              onSelectFinding={onSelectFinding}
+              history={assessmentHistory}
+            />
+
             {/* TIER 1: CRYPTOGRAPHIC FILE INTEGRITY */}
             <div className="bg-surface-container rounded p-2.5 border border-border-default space-y-2">
               <div className="flex items-center justify-between border-b border-border-hairpin pb-1.5">

@@ -120,3 +120,49 @@ export interface EvidenceAnnotation {
 
 export type ActiveWorkspace = 'canvas' | 'image' | 'video' | 'audio';
 
+export type AssessmentVerdict = 
+  | 'AUTHENTICITY_SUPPORTED'
+  | 'LIKELY_MANIPULATED'
+  | 'LIKELY_AI_GENERATED'
+  | 'SUSPICIOUS_INCONCLUSIVE'
+  | 'INSUFFICIENT_ANALYSIS';
+
+export interface EvidenceAssessment {
+  assessment_id: string;
+  case_id: string;
+  evidence_id: string;
+  assessment_version: number;
+  verdict: AssessmentVerdict;
+  ai_generation_assessment: string;
+  manipulation_assessment: string;
+  authenticity_assessment: string;
+  supporting_findings: any[];
+  conflicting_findings: any[];
+  examinations_performed: string[];
+  unavailable_or_failed_examinations: string[];
+  explanation: string;
+  limitations: string[];
+  fusion_policy_id: string;
+  fusion_policy_version: string;
+  model_method_references: string[];
+  status: 'active' | 'superseded';
+  generated_at: string;
+}
+
+export interface CaseAssessment {
+  case_id: string;
+  case_number: string;
+  title: string;
+  examiner_name: string;
+  total_evidence_assets: number;
+  assessed_assets_count: number;
+  verdict_summary: Record<string, number>;
+  overall_case_conclusion: string;
+  summary_statement: string;
+  corroborating_evidence: any[];
+  conflicting_evidence: any[];
+  individual_assessments: any[];
+  provisional_disclaimer: string;
+}
+
+
