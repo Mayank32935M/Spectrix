@@ -1,0 +1,788 @@
+<!DOCTYPE html><html lang="en" class="h-full bg-[#0a0e16] text-[#e1e7ec]"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SPECTRIX — Image Examination Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Geist', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            graphite: {
+              950: '#070a0f',
+              900: '#0a0e16',
+              850: '#0f141f',
+              800: '#141b27',
+              750: '#1b2333',
+              700: '#232e42',
+              600: '#32415c',
+            },
+            mint: {
+              DEFAULT: '#35c6a0',
+              muted: 'rgba(53, 198, 160, 0.15)',
+              border: 'rgba(53, 198, 160, 0.35)',
+            },
+            amber: {
+              DEFAULT: '#f59e0b',
+              muted: 'rgba(245, 158, 11, 0.15)',
+              border: 'rgba(245, 158, 11, 0.35)',
+            },
+            crimson: {
+              DEFAULT: '#f43f5e',
+              muted: 'rgba(244, 63, 94, 0.15)',
+              border: 'rgba(244, 63, 94, 0.35)',
+            },
+            violet: {
+              DEFAULT: '#a855f7',
+              muted: 'rgba(168, 85, 247, 0.15)',
+              border: 'rgba(168, 85, 247, 0.35)',
+            },
+            cyan: {
+              DEFAULT: '#38bdf8',
+              muted: 'rgba(56, 189, 248, 0.15)',
+              border: 'rgba(56, 189, 248, 0.35)',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom forensic grid & UI patterns */
+    .forensic-grid {
+      background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #0a0e16;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #232e42;
+      border-radius: 2px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #32415c;
+    }
+    .glass-panel {
+      background: rgba(15, 20, 31, 0.88);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+  </style>
+</head>
+
+<body class="h-screen max-h-screen overflow-hidden flex flex-col font-sans select-none bg-[#0a0e16] text-[#cbd5e1]">
+
+  <!-- ========================================================================= -->
+  <!-- A. COMPACT EXAMINATION HEADER                                             -->
+  <!-- ========================================================================= -->
+  <header class="h-12 border-b border-graphite-750 bg-graphite-900 px-3 flex items-center justify-between shrink-0 z-30">
+    <!-- Left Section: App Brand & Studio Identity -->
+    <div class="flex items-center space-x-3">
+      <div class="flex items-center space-x-2">
+        <a href="#" class="flex items-center space-x-2 group" title="Return to Evidence Intelligence Canvas">
+          <div class="w-6 h-6 rounded-[3px] bg-gradient-to-br from-mint/20 to-mint/5 border border-mint/40 flex items-center justify-center text-mint">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"></path></svg>
+          </div>
+          <span class="font-mono text-xs font-semibold tracking-wider text-slate-100 flex items-center">
+            SPECTRIX <span class="text-mint mx-1.5">//</span> <span class="text-slate-400 font-normal">IMAGE STUDIO</span>
+          </span>
+        </a>
+      </div>
+
+      <div class="h-4 w-px bg-graphite-750"></div>
+
+      <!-- Case Token & Active Status -->
+      <div class="flex items-center space-x-2">
+        <div class="flex items-center space-x-1.5 bg-graphite-850 px-2 py-0.5 rounded-[4px] border border-graphite-750">
+          <span class="text-[10px] uppercase font-mono text-slate-400">Case:</span>
+          <span class="text-[11px] font-mono font-medium text-amber">SPX-2026-0142</span>
+          <span class="w-1.5 h-1.5 rounded-full bg-amber animate-pulse ml-0.5"></span>
+        </div>
+        <span class="text-[11px] text-slate-300 font-medium truncate max-w-[200px]" title="Synthetic Media Investigation">Synthetic Media Inquiry</span>
+      </div>
+
+      <div class="h-4 w-px bg-graphite-750"></div>
+
+      <!-- Evidence File Meta Lockup -->
+      <div class="flex items-center space-x-2">
+        <span class="px-1.5 py-0.5 bg-crimson-muted border border-crimson-border text-crimson text-[10px] font-mono font-semibold rounded-[3px]">
+          SPX-EV-00031
+        </span>
+        <span class="font-mono text-[11px] text-slate-200 font-medium">press_briefing_leak.jpg</span>
+        <span class="text-[10px] font-mono text-slate-500">3840×2160 JPEG (9.4 MB)</span>
+      </div>
+    </div>
+
+    <!-- Center Section: View Mode & Display Modes -->
+    <div class="flex items-center space-x-1 bg-graphite-950 p-0.5 rounded-[4px] border border-graphite-750">
+      <button id="btn-mode-analysis" onclick="setViewMode('analysis')" class="px-2.5 py-1 rounded-[3px] text-[11px] font-medium transition-all bg-graphite-750 text-mint border border-mint/30 shadow-sm flex items-center space-x-1.5">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+        <span class="">Analysis Overlays</span>
+      </button>
+      <button id="btn-mode-split" onclick="setViewMode('split')" class="px-2.5 py-1 rounded-[3px] text-[11px] font-medium text-slate-400 hover:text-slate-200 transition-all flex items-center space-x-1.5">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 3v18m6-18v18"></path></svg>
+        <span class="">A/B Split</span>
+      </button>
+      <button id="btn-mode-original" onclick="setViewMode('original')" class="px-2.5 py-1 rounded-[3px] text-[11px] font-medium text-slate-400 hover:text-slate-200 transition-all flex items-center space-x-1.5">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="M21 15l-5-5L5 21"></path></svg>
+        <span class="">Raw Evidence</span>
+      </button>
+    </div>
+
+    <!-- Right Section: Integrity Status, Sync & Actions -->
+    <div class="flex items-center space-x-2.5">
+      <!-- Cryptographic Hash Digest Verification Indicator -->
+      <div class="flex items-center space-x-1.5 px-2 py-1 rounded-[4px] bg-graphite-850 border border-graphite-750" title="SHA-256 Digest matches ingestion log (Integrity Only - Non-provenance)">
+        <span class="w-2 h-2 rounded-full bg-mint"></span>
+        <span class="font-mono text-[10px] text-mint uppercase tracking-wider font-medium">Digest Verified</span>
+      </div>
+
+      <!-- Sync Status -->
+      <div class="flex items-center space-x-1 text-[10px] font-mono text-slate-400">
+        <svg class="w-3 h-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+        <span class="">SYNCED</span>
+      </div>
+
+      <div class="h-4 w-px bg-graphite-750"></div>
+
+      <!-- Quick Canvas Return Action -->
+      <button onclick="window.history.back()" class="px-2.5 py-1 rounded-[4px] bg-graphite-800 hover:bg-graphite-750 text-slate-300 hover:text-white border border-graphite-700 text-xs font-medium flex items-center space-x-1.5 transition-colors">
+        <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+        <span class="">Canvas</span>
+      </button>
+
+      <button class="px-2.5 py-1 rounded-[4px] bg-mint/10 hover:bg-mint/20 text-mint border border-mint/30 text-xs font-mono font-medium flex items-center space-x-1 transition-colors">
+        <span class="">AFFIDAVIT EXP</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ========================================================================= -->
+  <!-- MAIN WORKSPACE LAYOUT (CENTRAL VIEWPORT + RIGHT INSPECTOR)                -->
+  <!-- ========================================================================= -->
+  <div class="flex-1 min-h-0 flex relative overflow-hidden">
+
+    <!-- ----------------------------------------------------------------------- -->
+    <!-- B. CENTRAL IMAGE EXAMINATION VIEWPORT                                  -->
+    <!-- ----------------------------------------------------------------------- -->
+    <main class="flex-1 min-w-0 flex flex-col relative bg-graphite-950 forensic-grid overflow-hidden">
+
+      <!-- Viewport Utility Bar: Zoom, Coordinates, Transform Tools -->
+      <div class="h-8 border-b border-graphite-750 bg-graphite-900/90 px-3 flex items-center justify-between text-xs font-mono z-20">
+        <!-- Coordinates & Pixel Inspector Value -->
+        <div class="flex items-center space-x-4 text-slate-400">
+          <div class="flex items-center space-x-1.5">
+            <span class="text-slate-500">CURSOR:</span>
+            <span class="text-slate-200" id="coord-display">X: 1842 &nbsp; Y: 1214</span>
+          </div>
+          <div class="h-3 w-px bg-graphite-750"></div>
+          <div class="flex items-center space-x-2">
+            <span class="text-slate-500">PIXEL RGB:</span>
+            <div class="w-2.5 h-2.5 rounded-[2px] bg-[#9e6754] border border-white/20 inline-block"></div>
+            <span class="text-slate-200">158, 103, 84</span>
+            <span class="text-slate-500 font-sans text-[11px]">(sRGB Linear)</span>
+          </div>
+          <div class="h-3 w-px bg-graphite-750"></div>
+          <div class="flex items-center space-x-1.5">
+            <span class="text-slate-500">ZOOM:</span>
+            <span class="text-mint font-semibold" id="zoom-level">145%</span>
+          </div>
+        </div>
+
+        <!-- Viewport Controls & Overlay Visibility Quick Toggles -->
+        <div class="flex items-center space-x-2">
+          <!-- Zoom Controls -->
+          <div class="flex items-center bg-graphite-850 rounded-[4px] border border-graphite-750 p-0.5">
+            <button onclick="adjustZoom(-10)" class="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-white hover:bg-graphite-750 rounded-[2px]">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M20 12H4"></path></svg>
+            </button>
+            <button onclick="setZoom(100)" class="px-1.5 text-[10px] text-slate-300 hover:text-white hover:bg-graphite-750 rounded-[2px]">1:1</button>
+            <button onclick="setZoom(145)" class="px-1.5 text-[10px] text-mint hover:bg-graphite-750 rounded-[2px]">FIT</button>
+            <button onclick="adjustZoom(10)" class="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-white hover:bg-graphite-750 rounded-[2px]">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            </button>
+          </div>
+
+          <!-- Channel Scopes Quick Dropdown -->
+          <div class="flex items-center space-x-1 bg-graphite-850 px-2 py-0.5 rounded-[4px] border border-graphite-750 text-[11px]">
+            <span class="text-slate-400 font-sans">Channel:</span>
+            <select class="bg-transparent text-slate-200 outline-none cursor-pointer">
+              <option value="rgb">Full RGB</option>
+              <option value="r">Red Channel</option>
+              <option value="g">Green Channel</option>
+              <option value="b">Blue Channel</option>
+              <option value="lum">Luminance (Y)</option>
+              <option value="cr">Cb/Cr Chrominance</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Workspace Stage: Image Container with Layer Stacks -->
+      <div id="image-viewport" class="flex-1 relative overflow-hidden flex items-center justify-center cursor-crosshair">
+
+        <!-- FLOATING TOOL PALETTE (LEFT) -->
+        <div class="absolute left-4 top-4 z-20 flex flex-col space-y-1 glass-panel p-1 rounded-[6px] shadow-2xl border border-graphite-700">
+          <button id="tool-select" onclick="setTool('select')" class="w-7 h-7 rounded-[4px] bg-mint/15 text-mint border border-mint/30 flex items-center justify-center" title="Select Pointer (V)">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l7 18 3-7 7-3L3 3z"></path></svg>
+          </button>
+          <button id="tool-pan" onclick="setTool('pan')" class="w-7 h-7 rounded-[4px] text-slate-400 hover:text-slate-200 hover:bg-graphite-750 flex items-center justify-center" title="Pan Canvas (H)">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 11V6a2 2 0 0 0-4 0v5M14 10V4a2 2 0 0 0-4 0v6M10 10.5V6a2 2 0 0 0-4 0v8a7 7 0 0 0 14 0v-4a2 2 0 0 0-4 0"></path></svg>
+          </button>
+          <div class="h-px bg-graphite-750 my-0.5"></div>
+          <button id="tool-roi" onclick="setTool('roi')" class="w-7 h-7 rounded-[4px] text-slate-400 hover:text-slate-200 hover:bg-graphite-750 flex items-center justify-center" title="Region of Interest Box (R)">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="3 3"></rect></svg>
+          </button>
+          <button id="tool-rect" onclick="setTool('rect')" class="w-7 h-7 rounded-[4px] text-slate-400 hover:text-slate-200 hover:bg-graphite-750 flex items-center justify-center" title="Polygon / Crop (C)">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+          </button>
+          <button id="tool-freeform" onclick="setTool('freeform')" class="w-7 h-7 rounded-[4px] text-slate-400 hover:text-slate-200 hover:bg-graphite-750 flex items-center justify-center" title="Lasso / Boundary Trace (L)">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3.5 13C5 7 11 3 17 5s7 10 3 14-11 3-15-1"></path></svg>
+          </button>
+          <div class="h-px bg-graphite-750 my-0.5"></div>
+          <button id="tool-pixel" onclick="setTool('pixel')" class="w-7 h-7 rounded-[4px] text-slate-400 hover:text-slate-200 hover:bg-graphite-750 flex items-center justify-center" title="Color Picker &amp; Pixel Loupe (I)">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20m10-10H2"></path></svg>
+          </button>
+          <button id="tool-annotate" onclick="setTool('annotate')" class="w-7 h-7 rounded-[4px] text-slate-400 hover:text-slate-200 hover:bg-graphite-750 flex items-center justify-center" title="Add Analyst Annotation Pin (A)">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+          </button>
+        </div>
+
+        <!-- LAYER SWITCHER / OVERLAY CONTROLS FLOATING STRIP (TOP RIGHT OF CANVAS) -->
+        <div class="absolute right-4 top-4 z-20 glass-panel p-2 rounded-[6px] border border-graphite-700 shadow-xl flex flex-col space-y-1.5 w-60">
+          <div class="flex items-center justify-between border-b border-graphite-750 pb-1.5">
+            <span class="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-semibold flex items-center">
+              <span class="w-1.5 h-1.5 rounded-full bg-mint mr-1.5"></span> Forensic Overlays
+            </span>
+            <span class="text-[9px] font-mono text-slate-500">TOGGLE (1-5)</span>
+          </div>
+
+          <!-- Overlay Toggle 1: Manipulation Heatmap -->
+          <label class="flex items-center justify-between text-xs cursor-pointer hover:bg-graphite-800/60 p-1 rounded transition">
+            <div class="flex items-center space-x-2">
+              <input type="checkbox" id="layer-heatmap" checked="" onchange="toggleOverlay('heatmap', this.checked)" class="rounded text-crimson focus:ring-0 bg-graphite-800 border-graphite-600">
+              <span class="text-slate-200 text-[11px] font-medium">Model Heatmap</span>
+            </div>
+            <span class="px-1 py-0.5 rounded text-[9px] font-mono bg-crimson-muted text-crimson border border-crimson-border">ANOMALY</span>
+          </label>
+
+          <!-- Overlay Toggle 2: Facial Landmark Topology -->
+          <label class="flex items-center justify-between text-xs cursor-pointer hover:bg-graphite-800/60 p-1 rounded transition">
+            <div class="flex items-center space-x-2">
+              <input type="checkbox" id="layer-landmarks" checked="" onchange="toggleOverlay('landmarks', this.checked)" class="rounded text-violet focus:ring-0 bg-graphite-800 border-graphite-600">
+              <span class="text-slate-200 text-[11px] font-medium">Facial Landmarks (68-pt)</span>
+            </div>
+            <span class="px-1 py-0.5 rounded text-[9px] font-mono bg-violet-muted text-violet border border-violet-border">BIOMETRIC</span>
+          </label>
+
+          <!-- Overlay Toggle 3: Error Level Analysis (ELA) -->
+          <label class="flex items-center justify-between text-xs cursor-pointer hover:bg-graphite-800/60 p-1 rounded transition">
+            <div class="flex items-center space-x-2">
+              <input type="checkbox" id="layer-ela" onchange="toggleOverlay('ela', this.checked)" class="rounded text-cyan focus:ring-0 bg-graphite-800 border-graphite-600">
+              <span class="text-slate-200 text-[11px] font-medium">Error Level Analysis</span>
+            </div>
+            <span class="px-1 py-0.5 rounded text-[9px] font-mono bg-cyan-muted text-cyan border border-cyan-border">HEURISTIC</span>
+          </label>
+
+          <!-- Overlay Toggle 4: Noise Residual (PRNU / Sensor) -->
+          <label class="flex items-center justify-between text-xs cursor-pointer hover:bg-graphite-800/60 p-1 rounded transition">
+            <div class="flex items-center space-x-2">
+              <input type="checkbox" id="layer-noise" onchange="toggleOverlay('noise', this.checked)" class="rounded text-amber focus:ring-0 bg-graphite-800 border-graphite-600">
+              <span class="text-slate-200 text-[11px] font-medium">Sensor PRNU Residual</span>
+            </div>
+            <span class="px-1 py-0.5 rounded text-[9px] font-mono bg-amber-muted text-amber border border-amber-border">LEAD</span>
+          </label>
+
+          <!-- Overlay Toggle 5: Splicing / Copy-Move Vector Tethers -->
+          <label class="flex items-center justify-between text-xs cursor-pointer hover:bg-graphite-800/60 p-1 rounded transition">
+            <div class="flex items-center space-x-2">
+              <input type="checkbox" id="layer-splicing" checked="" onchange="toggleOverlay('splicing', this.checked)" class="rounded text-mint focus:ring-0 bg-graphite-800 border-graphite-600">
+              <span class="text-slate-200 text-[11px] font-medium">Splicing / Clone Vectors</span>
+            </div>
+            <span class="px-1 py-0.5 rounded text-[9px] font-mono bg-mint-muted text-mint border border-mint-border">MATCH</span>
+          </label>
+
+          <!-- Opacity Slider for Overlays -->
+          <div class="pt-1.5 border-t border-graphite-750 flex items-center justify-between text-[10px] font-mono text-slate-400">
+            <span class="">LAYER OPACITY:</span>
+            <div class="flex items-center space-x-2 w-28">
+              <input type="range" id="layer-opacity" min="10" max="100" value="75" oninput="updateOpacity(this.value)" class="w-full accent-mint h-1 bg-graphite-700 rounded cursor-pointer">
+              <span id="opacity-val" class="w-6 text-right text-slate-300">75%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- FLOATING FREQUENCY DOMAIN SCOPE (BOTTOM LEFT OF CANVAS) -->
+        <div class="absolute left-4 bottom-4 z-20 glass-panel p-2 rounded-[6px] border border-graphite-700 shadow-xl w-60">
+          <div class="flex items-center justify-between pb-1 border-b border-graphite-750 mb-1.5">
+            <span class="text-[10px] font-mono uppercase tracking-wider text-slate-300 font-medium flex items-center">
+              <svg class="w-3 h-3 text-cyan mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h3l3 8 4-16 3 10h5"></path></svg>
+              2D-FFT Radial Spectrum
+            </span>
+            <span class="text-[9px] font-mono text-amber">High-Freq Cutoff</span>
+          </div>
+          <!-- 2D FFT Power Spectral Visualization Graphic -->
+          <div class="relative w-full h-24 bg-graphite-950 rounded-[4px] border border-graphite-800 flex items-center justify-center overflow-hidden">
+            <!-- Simulated FFT Radial Grid -->
+            <div class="absolute inset-0 flex items-center justify-center opacity-30">
+              <div class="w-20 h-20 rounded-full border border-dashed border-cyan"></div>
+              <div class="w-12 h-12 rounded-full border border-cyan absolute"></div>
+              <div class="w-4 h-4 rounded-full bg-cyan/50 absolute"></div>
+              <div class="w-full h-px bg-cyan/40 absolute"></div>
+              <div class="h-full w-px bg-cyan/40 absolute"></div>
+            </div>
+            <!-- Spectral Energy Hotspot Scatter -->
+            <svg class="absolute inset-0 w-full h-full" viewBox="0 0 240 96">
+              <circle cx="120" cy="48" r="3" fill="#38bdf8"></circle>
+              <!-- Elliptical unnatural energy peak characteristic of diffusion upsampler -->
+              <ellipse cx="120" cy="48" rx="35" ry="18" fill="none" stroke="#f43f5e" stroke-dasharray="2 3" stroke-width="1.5"></ellipse>
+              <circle cx="140" cy="38" r="1.5" fill="#f43f5e"></circle>
+              <circle cx="100" cy="58" r="1.5" fill="#f43f5e"></circle>
+            </svg>
+            <div class="absolute bottom-1 right-1.5 font-mono text-[9px] text-crimson bg-graphite-900/90 px-1 py-0.2 rounded border border-crimson/40">
+              Asymmetric Roll-off
+            </div>
+          </div>
+          <div class="text-[9px] text-slate-400 font-sans mt-1 leading-tight">
+            Synthetic periodicity detected in facial ROI. Illustrative spectral anomaly.
+          </div>
+        </div>
+
+        <!-- MAIN FORENSIC CANVAS STAGE (IMAGE + INTERACTIVE ANCHORS) -->
+        <div id="canvas-anchor" class="relative transition-transform duration-100 ease-out shadow-2xl rounded-[4px] border border-graphite-700 overflow-hidden bg-black" style="transform: scale(1.0); width: 880px; height: 580px;">
+
+          <!-- LAYER 0: RAW EVIDENCE PHOTO (High-fidelity reference from project inventory) -->
+          <img id="evidence-raw-img" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCHW2RVFj5DEozO6NUFsjzuScc71QF5p5nNcr6tZmqiJsGz1Ng6akVG8EwPqyaDq4hJ5KK3n5KqKvsJpraq7A8Z0hCgoAdzxmcHNL5rXBVc2E_s6KhV_yGEWTPiDZMk_6AhgCd2Y6HaFWeZEf2grsFSYqEghczvbwXpigOJ9NNUc1UzV-F2I6zX3efUmaXK1RVkg9mT2CBA-AwSr3iMea2b5X0k0uNA0b_Hg9N_4AvEhFKPEPe_PI2dtw" alt="Forensic Subject Evidence" class="absolute inset-0 w-full h-full object-cover select-none pointer-events-none filter brightness-95">
+
+          <!-- LAYER 1: ERROR LEVEL ANALYSIS SIMULATION OVERLAY (Initially Hidden) -->
+          <div id="layer-ela-view" class="absolute inset-0 mix-blend-color-dodge opacity-0 pointer-events-none transition-opacity duration-200" style="background: radial-gradient(circle at 45% 42%, rgba(56, 189, 248, 0.5) 0%, rgba(15, 23, 42, 0.8) 70%);">
+            <div class="absolute inset-0" style="background-image: repeating-linear-gradient(45deg, rgba(56, 189, 248, 0.08) 0px, rgba(56, 189, 248, 0.08) 2px, transparent 2px, transparent 6px);"></div>
+          </div><div id="layer-noise-view" class="absolute inset-0 opacity-0 pointer-events-none transition-opacity duration-200 mix-blend-screen" style="background-image: radial-gradient(rgba(245, 158, 11, 0.25) 1px, transparent 1px), radial-gradient(rgba(245, 158, 11, 0.15) 1px, transparent 1px); background-size: 8px 8px, 12px 12px; background-position: 0px 0px, 4px 4px;"><div class="absolute inset-0 bg-gradient-to-t from-amber/10 via-transparent to-transparent"></div></div>
+
+          <!-- LAYER 2: MODEL MANIPULATION HEATMAP (Localised Suspicious Region) -->
+          <div id="layer-heatmap-view" class="absolute inset-0 pointer-events-none transition-opacity duration-200" style="opacity: 0.75;">
+            <!-- SVG Heatmap Gradient Mapping focused over the jawline/mouth & cheek region -->
+            <svg class="w-full h-full" viewBox="0 0 880 580" fill="none">
+              <defs>
+                <radialGradient id="heat-mandible" cx="44%" cy="62%" r="22%">
+                  <stop offset="0%" stop-color="#f43f5e" stop-opacity="0.85"></stop>
+                  <stop offset="45%" stop-color="#f59e0b" stop-opacity="0.65"></stop>
+                  <stop offset="75%" stop-color="#38bdf8" stop-opacity="0.3"></stop>
+                  <stop offset="100%" stop-color="#38bdf8" stop-opacity="0"></stop>
+                </radialGradient>
+                <radialGradient id="heat-background-splice" cx="82%" cy="32%" r="18%">
+                  <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.75"></stop>
+                  <stop offset="60%" stop-color="#f59e0b" stop-opacity="0.3"></stop>
+                  <stop offset="100%" stop-color="transparent" stop-opacity="0"></stop>
+                </radialGradient>
+              </defs>
+              <!-- Mandibular Region Heat Blob -->
+              <ellipse cx="388" cy="358" rx="140" ry="95" fill="url(#heat-mandible)" class="mix-blend-screen"></ellipse>
+              <!-- Background Architecture Splice Blob -->
+              <ellipse cx="720" cy="186" rx="90" ry="70" fill="url(#heat-background-splice)" class="mix-blend-screen"></ellipse>
+            </svg>
+          </div>
+
+          <!-- LAYER 3: SPLICING & COPY-MOVE TETHERS (Interactive candidate duplicated patches) -->
+          <div id="layer-splicing-view" class="absolute inset-0 pointer-events-auto transition-opacity duration-200">
+            <svg class="w-full h-full" viewBox="0 0 880 580">
+              <!-- Connecting Vector Spline between cloned microphone/curtain patches -->
+              <path d="M 720 186 C 760 140, 780 280, 810 340" fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-dasharray="4 3" class="animate-pulse"></path>
+              
+              <!-- Patch 1 Bounding Box -->
+              <rect x="670" y="146" width="95" height="80" rx="3" fill="rgba(245, 158, 11, 0.12)" stroke="#f59e0b" stroke-width="1.5"></rect>
+              <text x="674" y="140" font-family="JetBrains Mono" font-size="10" fill="#f59e0b">SPLICE_ROI_A [0.941 sim]</text>
+
+              <!-- Patch 2 Bounding Box -->
+              <rect x="765" y="300" width="95" height="80" rx="3" fill="rgba(245, 158, 11, 0.12)" stroke="#f59e0b" stroke-width="1.5"></rect>
+              <text x="769" y="294" font-family="JetBrains Mono" font-size="10" fill="#f59e0b">SRC_REF_B</text>
+            </svg>
+          </div>
+
+          <!-- LAYER 4: FACIAL LANDMARKS TOPOLOGY (Interactive 68-pt Biometric Wireframe) -->
+          <div id="layer-landmarks-view" class="absolute inset-0 pointer-events-auto transition-opacity duration-200">
+            <svg class="w-full h-full" viewBox="0 0 880 580">
+              <!-- Facial Contour Polyline -->
+              <path d="M 285 240 Q 300 370 388 440 Q 476 370 490 240" fill="none" stroke="#a855f7" stroke-width="1.2" stroke-opacity="0.8"></path>
+              <!-- Eyebrows -->
+              <path d="M 315 220 Q 340 210 365 222" fill="none" stroke="#a855f7" stroke-width="1.2"></path>
+              <path d="M 410 222 Q 435 210 460 220" fill="none" stroke="#a855f7" stroke-width="1.2"></path>
+              <!-- Nose Bridge & Base -->
+              <path d="M 388 225 L 388 300 L 372 312 L 388 316 L 404 312 Z" fill="none" stroke="#a855f7" stroke-width="1.2"></path>
+              <!-- Eyes Wireframe -->
+              <ellipse cx="340" cy="242" rx="18" ry="10" fill="none" stroke="#a855f7" stroke-width="1.2"></ellipse>
+              <ellipse cx="435" cy="242" rx="18" ry="10" fill="none" stroke="#a855f7" stroke-width="1.2"></ellipse>
+              <!-- Mouth Boundary with Highlighted Inpaint Shift -->
+              <path d="M 352 355 Q 388 340 424 355 Q 388 385 352 355 Z" fill="rgba(168, 85, 247, 0.15)" stroke="#a855f7" stroke-width="1.5"></path>
+
+              <!-- Landmark Keypoints (Clickable) -->
+              <g fill="#a855f7">
+                <circle cx="285" cy="240" r="2.5"></circle>
+                <circle cx="295" cy="290" r="2.5"></circle>
+                <circle cx="310" cy="340" r="2.5"></circle>
+                <circle cx="330" cy="390" r="2.5"></circle>
+                <circle cx="388" cy="440" r="3" fill="#f43f5e" stroke="#fff" stroke-width="1" class="cursor-pointer" onclick="selectFinding('fnd-01')"></circle>
+                <circle cx="445" cy="390" r="2.5"></circle>
+                <circle cx="465" cy="340" r="2.5"></circle>
+                <circle cx="480" cy="290" r="2.5"></circle>
+                <circle cx="490" cy="240" r="2.5"></circle>
+
+                <!-- Mandibular Inpaint Anomaly Discontinuity Pin -->
+                <circle cx="388" cy="360" r="4" fill="#f43f5e" class="animate-ping"></circle>
+                <circle cx="388" cy="360" r="3.5" fill="#f43f5e" stroke="#fff" stroke-width="1" class="cursor-pointer" onclick="selectFinding('fnd-01')"></circle>
+              </g>
+            </svg>
+          </div>
+
+          <!-- INTERACTIVE FORENSIC BOUNDING BOX: PRIMARY FINDING (FND_01 Mandibular Warp) -->
+          <div id="bbox-mandible" onclick="selectFinding('fnd-01')" class="absolute cursor-pointer group" style="left: 275px; top: 295px; width: 230px; height: 165px;">
+            <!-- Outer Pulsing Forensic Box -->
+            <div class="absolute inset-0 border border-crimson rounded-[3px] bg-crimson/10 group-hover:bg-crimson/20 transition-colors"></div>
+            <!-- Precision Corner Reticles -->
+            <div class="absolute -top-1 -left-1 w-2.5 h-2.5 border-t-2 border-l-2 border-crimson"></div>
+            <div class="absolute -top-1 -right-1 w-2.5 h-2.5 border-t-2 border-r-2 border-crimson"></div>
+            <div class="absolute -bottom-1 -left-1 w-2.5 h-2.5 border-b-2 border-l-2 border-crimson"></div>
+            <div class="absolute -bottom-1 -right-1 w-2.5 h-2.5 border-b-2 border-r-2 border-crimson"></div>
+            
+            <!-- Floating Monospace Label Tag -->
+            <div class="absolute -top-6 left-0 bg-graphite-900 border border-crimson/60 px-2 py-0.5 rounded-[3px] text-[10px] font-mono text-crimson flex items-center space-x-1.5 shadow-lg">
+              <span class="w-1.5 h-1.5 rounded-full bg-crimson"></span>
+              <span class="font-bold">FND_01 // FACIAL_INPAINT_WARP</span>
+              <span class="text-slate-400">LR ~ 10^3.8</span>
+            </div>
+            
+            <!-- Bottom Dimension Pill -->
+            <div class="absolute -bottom-5 right-0 bg-graphite-900/90 border border-graphite-700 px-1.5 py-0.2 rounded text-[9px] font-mono text-slate-300">
+              ROI: [X:1210, Y:1280] 1012×725px
+            </div>
+          </div>
+
+          <!-- SECONDARY BOUNDING BOX: BACKGROUND SPLICING (FND_02) -->
+          <div id="bbox-splice" onclick="selectFinding('fnd-02')" class="absolute cursor-pointer group" style="left: 668px; top: 144px; width: 100px; height: 84px;">
+            <div class="absolute inset-0 border border-amber rounded-[3px] bg-amber/10 group-hover:bg-amber/20 transition-colors"></div>
+            <div class="absolute -top-1 -left-1 w-2 h-2 border-t-2 border-l-2 border-amber"></div>
+            <div class="absolute -top-1 -right-1 w-2 h-2 border-t-2 border-r-2 border-amber"></div>
+            <div class="absolute -bottom-1 -left-1 w-2 h-2 border-b-2 border-l-2 border-amber"></div>
+            <div class="absolute -bottom-1 -right-1 w-2 h-2 border-b-2 border-r-2 border-amber"></div>
+            
+            <div class="absolute -top-5 left-0 bg-graphite-900 border border-amber/60 px-1.5 py-0.2 rounded text-[9px] font-mono text-amber">
+              FND_02 // SPLICING_COPY_MOVE
+            </div>
+          </div><div id="bbox-ela" onclick="selectFinding('fnd-03')" class="absolute cursor-pointer group" style="left: 310px; top: 460px; width: 155px; height: 75px;"><div class="absolute inset-0 border border-cyan rounded-[3px] bg-cyan/10 group-hover:bg-cyan/20 transition-colors"></div><div class="absolute -top-1 -left-1 w-2 h-2 border-t-2 border-l-2 border-cyan"></div><div class="absolute -top-1 -right-1 w-2 h-2 border-t-2 border-r-2 border-cyan"></div><div class="absolute -bottom-1 -left-1 w-2 h-2 border-b-2 border-l-2 border-cyan"></div><div class="absolute -bottom-1 -right-1 w-2 h-2 border-b-2 border-r-2 border-cyan"></div><div class="absolute -top-5 left-0 bg-graphite-900 border border-cyan/60 px-1.5 py-0.2 rounded text-[9px] font-mono text-cyan flex items-center space-x-1"><span class="w-1.5 h-1.5 rounded-full bg-cyan"></span><span class="">FND_03 // ELA_COLLAR_ANOMALY</span></div></div>
+
+          <!-- HEATMAP INTENSITY LEGEND FLOATING OVERLAY (IN-VIEWPORT) -->
+          <div class="absolute bottom-3 right-3 bg-graphite-900/90 border border-graphite-700 px-2 py-1.5 rounded-[4px] shadow-lg flex items-center space-x-3 pointer-events-none">
+            <span class="text-[9px] font-mono text-slate-400 uppercase">MODEL DISRUPTION:</span>
+            <div class="flex items-center space-x-1">
+              <span class="text-[9px] font-mono text-slate-400">LOW</span>
+              <div class="w-20 h-2 rounded-[2px] bg-gradient-to-r from-cyan to-amber via-crimson"></div>
+              <span class="text-[9px] font-mono text-crimson font-bold">HIGH</span>
+            </div>
+            <span class="text-[8px] font-sans text-slate-500 border-l border-graphite-750 pl-2">Illustrative Benchmark Model</span>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- --------------------------------------------------------------------- -->
+      <!-- E. BOTTOM EXAMINATION DOCK (COLLAPSIBLE ANALYSIS PIPELINE)           -->
+      <!-- --------------------------------------------------------------------- -->
+      <footer class="h-28 border-t border-graphite-750 bg-graphite-900/95 flex flex-col shrink-0 z-20">
+        <!-- Dock Header Tab / State Bar -->
+        <div class="h-6 px-3 border-b border-graphite-750 bg-graphite-850 flex items-center justify-between text-[11px] font-mono">
+          <div class="flex items-center space-x-3">
+            <span class="text-slate-300 font-semibold flex items-center">
+              <svg class="w-3 h-3 text-mint mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+              ANALYSIS PIPELINE QUEUE
+            </span>
+            <span class="text-slate-500">|</span>
+            <span class="text-mint font-medium">6/7 Methods Complete</span>
+            <span class="text-slate-500">|</span>
+            <span class="text-slate-400">Total Compute: 3.42s (GPU Tensor Core 01)</span>
+          </div>
+          <div class="flex items-center space-x-3 text-slate-400">
+            <span class="">FINDINGS JUMP:</span>
+            <button onclick="selectFinding('fnd-01')" class="hover:text-crimson font-medium text-crimson">[FND_01 Mandible]</button>
+            <button onclick="selectFinding('fnd-02')" class="hover:text-amber font-medium text-amber">[FND_02 Splicing]</button>
+            <button onclick="selectFinding('fnd-03')" class="hover:text-cyan font-medium text-cyan">[FND_03 ELA]</button>
+            <button class="hover:text-white" title="Collapse Dock">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Pipeline Execution Chips & History Row -->
+        <div class="flex-1 px-3 py-1.5 flex items-center space-x-2.5 overflow-x-auto custom-scrollbar">
+
+          <!-- Method 1: Biometric Landmark Extractor -->
+          <div class="px-2.5 py-1.5 bg-graphite-800 rounded-[4px] border border-graphite-700 min-w-[190px] flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-mono font-medium text-slate-200">1. MediaPipe_Face_v0.9</span>
+              <span class="text-[9px] font-mono text-mint px-1 bg-mint-muted rounded">PASS</span>
+            </div>
+            <div class="text-[10px] text-slate-400 font-sans truncate">68 Landmarks fitted</div>
+            <div class="text-[9px] font-mono text-slate-500">0.18s • Dual eye/jaw mesh</div>
+          </div>
+
+          <!-- Method 2: Diffusion Inpainting Boundary Detector -->
+          <div class="px-2.5 py-1.5 bg-graphite-800 rounded-[4px] border border-crimson-border min-w-[200px] flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-mono font-medium text-crimson">2. SDXL_Inpaint_v1.5</span>
+              <span class="text-[9px] font-mono text-crimson px-1 bg-crimson-muted rounded font-bold">FLAGGED</span>
+            </div>
+            <div class="text-[10px] text-slate-200 font-sans truncate">Boundary spectral anomaly</div>
+            <div class="text-[9px] font-mono text-slate-500">1.12s • Likelihood Ratio 10^3.8</div>
+          </div>
+
+          <!-- Method 3: Sensor Noise PRNU Residual -->
+          <div class="px-2.5 py-1.5 bg-graphite-800 rounded-[4px] border border-amber-border min-w-[200px] flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-mono font-medium text-amber">3. PRNU_Extractor_v0.9</span>
+              <span class="text-[9px] font-mono text-amber px-1 bg-amber-muted rounded">LEAD ONLY</span>
+            </div>
+            <div class="text-[10px] text-slate-300 font-sans truncate">Sensor fingerprint mismatch</div>
+            <div class="text-[9px] font-mono text-slate-500">0.84s • PCE = 2.1 (Below base)</div>
+          </div>
+
+          <!-- Method 4: Error Level Analysis -->
+          <div class="px-2.5 py-1.5 bg-graphite-800 rounded-[4px] border border-cyan-border min-w-[190px] flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-mono font-medium text-cyan">4. ELA_Quantizer_v2</span>
+              <span class="text-[9px] font-mono text-cyan px-1 bg-cyan-muted rounded">HEURISTIC</span>
+            </div>
+            <div class="text-[10px] text-slate-300 font-sans truncate">JPEG Quality Q92 / Q75</div>
+            <div class="text-[9px] font-mono text-slate-500">0.24s • Resaved compression</div>
+          </div>
+
+          <!-- Method 5: Copy-Move Feature Matcher -->
+          <div class="px-2.5 py-1.5 bg-graphite-800 rounded-[4px] border border-graphite-700 min-w-[190px] flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-mono font-medium text-slate-200">5. SIFT_Duplication_v1</span>
+              <span class="text-[9px] font-mono text-amber px-1 bg-amber-muted rounded">1 PAIR</span>
+            </div>
+            <div class="text-[10px] text-slate-300 font-sans truncate">Keypoint cluster match</div>
+            <div class="text-[9px] font-mono text-slate-500">0.62s • Cosine Sim 0.941</div>
+          </div>
+
+          <!-- Method 6: EXIF & C2PA Provenance Parser -->
+          <div class="px-2.5 py-1.5 bg-graphite-800 rounded-[4px] border border-graphite-700 min-w-[190px] flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-mono font-medium text-slate-200">6. ExifTool_C2PA_v12</span>
+              <span class="text-[9px] font-mono text-crimson px-1 bg-crimson-muted rounded">STRIPPED</span>
+            </div>
+            <div class="text-[10px] text-slate-300 font-sans truncate">Photoshop 2025 Header</div>
+            <div class="text-[9px] font-mono text-slate-500">0.05s • No JUMBF Box</div>
+          </div>
+
+          <!-- Method 7: Deepfake Artifact Classifier (Running) -->
+          <div class="px-2.5 py-1.5 bg-graphite-850 rounded-[4px] border border-dashed border-graphite-600 min-w-[180px] flex flex-col justify-between opacity-75">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-mono font-medium text-slate-400">7. Frequency_FFT_Scope</span>
+              <span class="text-[9px] font-mono text-slate-400 px-1 bg-graphite-750 rounded animate-pulse">QUEUED</span>
+            </div>
+            <div class="text-[10px] text-slate-500 font-sans truncate">Radial power spectrum</div>
+            <div class="text-[9px] font-mono text-slate-600">Pending GPU allocation</div>
+          </div>
+
+        </div>
+      </footer>
+
+    </main>
+
+    <!-- ----------------------------------------------------------------------- -->
+    <!-- D. RIGHT-SIDE CONTEXTUAL FORENSIC INSPECTOR                             -->
+    <!-- ----------------------------------------------------------------------- -->
+    <aside id="inspector-panel" class="w-[390px] shrink-0 border-l border-graphite-750 bg-graphite-900 flex flex-col z-30 transition-all duration-200 ease-in-out">
+
+      <!-- Inspector Header & Collapse Affordance -->
+      <div class="h-10 px-3 border-b border-graphite-750 bg-graphite-850 flex items-center justify-between shrink-0">
+        <div class="flex items-center space-x-2">
+          <span class="w-2 h-2 rounded-full bg-crimson"></span>
+          <span class="font-mono text-xs font-semibold text-slate-100 uppercase tracking-wider">
+            INSPECTOR <span class="text-slate-500">//</span> <span id="inspector-target-id" class="text-crimson">FND_01</span>
+          </span>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button onclick="toggleInspectorTab('findings')" id="tab-btn-findings" class="px-2 py-0.5 rounded text-[11px] font-medium bg-graphite-750 text-mint border border-mint/30">Findings</button>
+          <button onclick="toggleInspectorTab('metadata')" id="tab-btn-metadata" class="px-2 py-0.5 rounded text-[11px] font-medium text-slate-400 hover:text-white">Metadata</button>
+          <button onclick="toggleInspectorTab('region')" id="tab-btn-region" class="px-2 py-0.5 rounded text-[11px] font-medium text-slate-400 hover:text-white">ROI</button>
+        </div>
+      </div>
+
+      <!-- Inspector Scrollable Body -->
+      <div class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-4"><div id="tab-content-findings" class="space-y-3.5"><div class="bg-graphite-850 rounded-[4px] border border-crimson-border p-3 space-y-2.5 shadow-lg"><div class="flex items-center justify-between"><span id="inspector-classification-badge" class="px-1.5 py-0.5 bg-crimson-muted text-crimson font-mono text-[10px] font-bold rounded-[3px] border border-crimson/30">CLASSIFICATION: SYNTHETIC INPAINT</span><span class="text-[10px] font-mono text-slate-400">REV: 02 // CONFIRMED</span></div><div><h3 class="text-xs font-semibold text-slate-100" id="finding-title">Mandibular Boundary Pixel Discontinuity</h3><p class="text-[11px] text-slate-300 font-sans mt-1 leading-relaxed" id="finding-desc">High-frequency 2D-FFT spectral roll-off and boundary pixel discontinuity detected along mandibular contour (jawline to chin apex). Characteristic of diffusion-based inpainting composite over baseline photographic substrate.</p></div><div class="grid grid-cols-2 gap-2 pt-1 border-t border-graphite-750 text-[11px] font-mono"><div class="bg-graphite-900 p-2 rounded-[3px] border border-graphite-800"><div class="text-[9px] text-slate-500 uppercase">Likelihood Ratio (LR)</div><div id="metric-lr" class="text-crimson font-semibold text-xs mt-0.5">10^3.8 (Illustrative)</div><div id="metric-lr-sub" class="text-[9px] text-slate-400 font-sans">Support for H1: Synthesis</div></div><div class="bg-graphite-900 p-2 rounded-[3px] border border-graphite-800"><div class="text-[9px] text-slate-500 uppercase">Detection Method</div><div id="metric-method" class="text-slate-200 font-semibold text-xs mt-0.5">SDXL_Inpaint_v1.5</div><div id="metric-method-sub" class="text-[9px] text-slate-400 font-sans">Dual-frequency residual</div></div></div><div class="bg-graphite-950 p-2 rounded-[3px] border border-graphite-800 text-[10px] text-slate-400 font-sans leading-tight"><span class="text-amber font-mono font-medium">LIMITATION:</span> <span id="finding-limitation" class="">Heuristic model output on uncompressed boundary. JPEG re-compression at Q &lt; 80 may induce false positives. Cross-modal audio viseme corroboration recommended.</span></div></div><div class="bg-graphite-850 rounded-[4px] border border-graphite-750 p-3 space-y-2"><div class="flex items-center justify-between border-b border-graphite-750 pb-1.5"><span class="text-[11px] font-mono font-semibold text-slate-200 uppercase tracking-wider flex items-center"><svg class="w-3.5 h-3.5 text-mint mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect></svg>Selected ROI Coordinates</span><span class="text-[10px] font-mono text-mint">ACTIVE HOVER</span></div><div class="space-y-1.5 text-xs font-mono"><div class="flex justify-between py-0.5 border-b border-graphite-800"><span class="text-slate-400">Bounding Box:</span><span id="roi-bbox-val" class="text-slate-200">[X: 1210, Y: 1280]</span></div><div class="flex justify-between py-0.5 border-b border-graphite-800"><span class="text-slate-400">ROI Extents:</span><span id="roi-extents-val" class="text-slate-200">1012 × 725 px (24.1% frame)</span></div><div class="flex justify-between py-0.5 border-b border-graphite-800"><span class="text-slate-400">Sensor PCE:</span><span id="roi-pce-val" class="text-amber font-medium">2.1 (Sub-threshold)</span></div><div class="flex justify-between py-0.5"><span class="text-slate-400">ELA Variance:</span><span id="roi-ela-val" class="text-cyan font-medium">Δ 18.4% vs Background</span></div></div></div><div class="bg-graphite-850 rounded-[4px] border border-graphite-750 p-3 space-y-2"><div class="flex items-center justify-between border-b border-graphite-750 pb-1.5"><span class="text-[11px] font-mono font-semibold text-slate-200 uppercase tracking-wider flex items-center"><svg class="w-3.5 h-3.5 text-slate-400 mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>File &amp; Metadata Extraction</span><span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-crimson-muted text-crimson border border-crimson-border">ALTERED HEADER</span></div><div class="space-y-1.5 text-xs font-mono"><div class="flex justify-between items-center py-0.5 border-b border-graphite-800"><span class="text-slate-400">SHA-256:</span><div class="flex items-center space-x-1"><span class="text-slate-200">4f9c87d2...e1b099c2</span><button onclick="navigator.clipboard.writeText('4f9c87d2a801e0c765ef9b0123e1b099c28892'); this.innerText='COPIED'; setTimeout(()=&gt;this.innerText='COPY', 1200)" class="text-[9px] px-1 py-0.2 bg-graphite-750 hover:bg-graphite-700 text-slate-300 rounded border border-graphite-600">COPY</button></div></div><div class="flex justify-between py-0.5 border-b border-graphite-800"><span class="text-slate-400">Color Profile:</span><span class="text-slate-200">sRGB IEC61966-2.1</span></div><div class="flex justify-between py-0.5 border-b border-graphite-800"><span class="text-slate-400">Encoder / App:</span><span class="text-amber font-medium">Adobe Photoshop 26.1 (Mac)</span></div><div class="flex justify-between py-0.5 border-b border-graphite-800"><span class="text-slate-400">C2PA Manifest:</span><span class="text-crimson font-medium">Missing / Stripped at source</span></div><div class="flex justify-between py-0.5"><span class="text-slate-400">Original EXIF:</span><span class="text-slate-400">GPS &amp; Camera Serial Purged</span></div></div></div><div class="bg-graphite-850 rounded-[4px] border border-graphite-750 p-3 space-y-2"><div class="flex items-center justify-between border-b border-graphite-750 pb-1.5"><span class="text-[11px] font-mono font-semibold text-slate-200 uppercase tracking-wider flex items-center"><svg class="w-3.5 h-3.5 text-violet mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>Analyst Hypothesis Note</span><span class="text-[9px] font-mono text-slate-400">REV: 03</span></div><div class="bg-graphite-950 p-2.5 rounded-[3px] border border-graphite-800 text-[11px] text-slate-300 font-sans leading-relaxed italic">“Facial region displays characteristic high-frequency roll-off consistent with diffusion inpainting inserted over authentic high-resolution press photo. Discrepancy between facial PRNU and background wall suggests composite assembly.”</div><div class="flex items-center justify-between text-[10px] font-mono text-slate-500 pt-1"><span class="">Examiner: Dr. E. Vance</span><span class="">2026-03-02 09:14:22 UTC</span></div><div class="pt-1"><button onclick="alert('Observation appended to Case SPX-2026-0142 timeline')" class="w-full py-1.5 bg-graphite-800 hover:bg-graphite-750 text-slate-300 hover:text-white rounded-[4px] border border-graphite-700 text-xs font-medium flex items-center justify-center space-x-1.5 transition"><svg class="w-3 h-3 text-mint" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M12 4v16m8-8H4"></path></svg><span class="">Append ROI Observation</span></button></div></div></div></div>
+
+      <!-- Inspector Footer Bar -->
+      <div class="h-9 px-3 border-t border-graphite-750 bg-graphite-850 flex items-center justify-between text-xs font-mono shrink-0">
+        <span class="text-slate-400 text-[10px]">CASE ITEM: #00031</span>
+        <button class="text-mint hover:underline text-[11px] flex items-center space-x-1">
+          <span class="">Include in Findings Report</span>
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+        </button>
+      </div>
+
+    </aside>
+
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- JAVASCRIPT: DYNAMIC FORENSIC INTERACTION LOGIC                            -->
+  <!-- ========================================================================= -->
+  <script>
+    let currentZoom = 145;
+    let activeTool = 'select';
+    let currentViewMode = 'analysis';
+
+    // Interactive View Mode Switcher
+    function setViewMode(mode) {
+      currentViewMode = mode;
+      const btnAnalysis = document.getElementById('btn-mode-analysis');
+      const btnSplit = document.getElementById('btn-mode-split');
+      const btnOriginal = document.getElementById('btn-mode-original');
+
+      [btnAnalysis, btnSplit, btnOriginal].forEach(btn => {
+        btn.className = "px-2.5 py-1 rounded-[3px] text-[11px] font-medium text-slate-400 hover:text-slate-200 transition-all flex items-center space-x-1.5";
+      });
+
+      const heatmap = document.getElementById('layer-heatmap-view');
+      const landmarks = document.getElementById('layer-landmarks-view');
+      const splicing = document.getElementById('layer-splicing-view');
+      const ela = document.getElementById('layer-ela-view');
+
+      if (mode === 'analysis') {
+        btnAnalysis.className = "px-2.5 py-1 rounded-[3px] text-[11px] font-medium transition-all bg-graphite-750 text-mint border border-mint/30 shadow-sm flex items-center space-x-1.5";
+        heatmap.style.opacity = "0.75";
+        landmarks.style.opacity = "1";
+        splicing.style.opacity = "1";
+      } else if (mode === 'original') {
+        btnOriginal.className = "px-2.5 py-1 rounded-[3px] text-[11px] font-medium transition-all bg-graphite-750 text-mint border border-mint/30 shadow-sm flex items-center space-x-1.5";
+        heatmap.style.opacity = "0";
+        landmarks.style.opacity = "0";
+        splicing.style.opacity = "0";
+        ela.style.opacity = "0";
+      } else if (mode === 'split') {
+        btnSplit.className = "px-2.5 py-1 rounded-[3px] text-[11px] font-medium transition-all bg-graphite-750 text-mint border border-mint/30 shadow-sm flex items-center space-x-1.5";
+        heatmap.style.opacity = "0.5";
+        landmarks.style.opacity = "0.7";
+      }
+    }
+
+    // Toggle Specific Forensic Layer
+    function toggleOverlay(layerId, isChecked) {
+      const el = document.getElementById('layer-' + layerId + '-view');
+      if (!el) return;
+      if (layerId === 'heatmap') {
+        el.style.opacity = isChecked ? (document.getElementById('layer-opacity').value / 100) : "0";
+      } else if (layerId === 'ela') {
+        el.style.opacity = isChecked ? "0.85" : "0";
+      } else {
+        el.style.opacity = isChecked ? "1" : "0";
+      }
+    }
+
+    // Layer Opacity Slider
+    function updateOpacity(val) {
+      document.getElementById('opacity-val').innerText = val + '%';
+      const heatmap = document.getElementById('layer-heatmap-view');
+      if (heatmap && document.getElementById('layer-heatmap').checked) {
+        heatmap.style.opacity = (val / 100).toString();
+      }
+    }
+
+    // Active Tool Switcher
+    function setTool(toolName) {
+      activeTool = toolName;
+      const tools = ['select', 'pan', 'roi', 'rect', 'freeform', 'pixel', 'annotate'];
+      tools.forEach(t => {
+        const btn = document.getElementById('tool-' + t);
+        if (btn) {
+          if (t === toolName) {
+            btn.className = "w-7 h-7 rounded-[4px] bg-mint/15 text-mint border border-mint/30 flex items-center justify-center";
+          } else {
+            btn.className = "w-7 h-7 rounded-[4px] text-slate-400 hover:text-slate-200 hover:bg-graphite-750 flex items-center justify-center";
+          }
+        }
+      });
+    }
+
+    // Zoom Controls
+    function setZoom(val) {
+      currentZoom = val;
+      applyZoom();
+    }
+    function adjustZoom(delta) {
+      currentZoom = Math.min(300, Math.max(50, currentZoom + delta));
+      applyZoom();
+    }
+    function applyZoom() {
+      document.getElementById('zoom-level').innerText = currentZoom + '%';
+      const anchor = document.getElementById('canvas-anchor');
+      anchor.style.transform = `scale(${currentZoom / 145})`;
+    }
+
+    // Dynamic Finding Selection (Connecting Viewport Box to Right Inspector)
+    function selectFinding(findingId) {
+      const inspectorTarget = document.getElementById('inspector-target-id');
+      const title = document.getElementById('finding-title');
+      const desc = document.getElementById('finding-desc');
+
+      if (findingId === 'fnd-01') {
+        inspectorTarget.innerText = "FND_01";
+        inspectorTarget.className = "text-crimson font-bold";
+        title.innerText = "Mandibular Boundary Pixel Discontinuity";
+        desc.innerText = "High-frequency 2D-FFT spectral roll-off and boundary pixel discontinuity detected along mandibular contour (jawline to chin apex). Characteristic of diffusion-based inpainting composite over baseline photographic substrate.";
+      } else if (findingId === 'fnd-02') {
+        inspectorTarget.innerText = "FND_02";
+        inspectorTarget.className = "text-amber font-bold";
+        title.innerText = "Background Splicing & Keypoint Duplication";
+        desc.innerText = "SIFT keypoint clustering identified potential clone-brush duplication between background drape coordinates [X:670, Y:146] and [X:765, Y:300]. Investigative lead indicating post-capture composition.";
+      } else if (findingId === 'fnd-03') {
+        inspectorTarget.innerText = "FND_03";
+        inspectorTarget.className = "text-cyan font-bold";
+        title.innerText = "JPEG Error Level Analysis Inconsistency";
+        desc.innerText = "Re-compression delta matrix displays localized high-frequency error rates around the subject's neck collar, differing from the camera's uniform baseline quantization table.";
+      }
+    }
+
+    // Inspector Tab Switcher
+    function toggleInspectorTab(tab) {
+      const tabs = ['findings', 'metadata', 'region'];
+      tabs.forEach(t => {
+        const btn = document.getElementById('tab-btn-' + t);
+        if (t === tab) {
+          btn.className = "px-2 py-0.5 rounded text-[11px] font-medium bg-graphite-750 text-mint border border-mint/30";
+        } else {
+          btn.className = "px-2 py-0.5 rounded text-[11px] font-medium text-slate-400 hover:text-white";
+        }
+      });
+    }
+
+    // Dynamic Cursor Coordinate Tracking on Canvas Stage
+    const viewport = document.getElementById('image-viewport');
+    viewport.addEventListener('mousemove', (e) => {
+      const rect = viewport.getBoundingClientRect();
+      const x = Math.round((e.clientX - rect.left) * 4.36);
+      const y = Math.round((e.clientY - rect.top) * 3.72);
+      if (x >= 0 && y >= 0 && x <= 3840 && y <= 2160) {
+        document.getElementById('coord-display').innerText = `X: ${x}   Y: ${y}`;
+      }
+    });
+  </script>
+
+
+
+
+</body></html>
