@@ -286,7 +286,7 @@ export const UniversalInspector: React.FC<UniversalInspectorProps> = ({
                       >
                         <div className="flex items-center justify-between">
                           <span className="font-mono font-bold text-[11px] text-accent-crimson">
-                            {f.finding_type.replace('_', ' ').toUpperCase()}
+                            {f.finding_type.replace(/_/g, ' ').toUpperCase()}
                           </span>
                           <span className="font-mono text-[9px] text-content-muted">
                             {f.method_id}

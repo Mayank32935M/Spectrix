@@ -25,7 +25,7 @@ export interface MediaLocation {
     width: number;
     height: number;
     normalized?: boolean;
-  };
+  } | any;
   temporal_range?: {
     start_time_seconds: number;
     end_time_seconds: number;
@@ -37,13 +37,24 @@ export interface MediaLocation {
     low_hz: number;
     high_hz: number;
   };
+  start_time?: number;
+  end_time?: number;
+  smpte_start?: string;
+  smpte_end?: string;
+  target_frame?: number;
+  [key: string]: any;
 }
 
 export type FindingClassification =
   | 'anomaly'
   | 'investigative_lead'
   | 'heuristic_warning'
-  | 'baseline_match';
+  | 'baseline_match'
+  | 'manipulation_indicator'
+  | 'ai_generated_indicator'
+  | 'metadata_anomaly'
+  | 'compression_anomaly'
+  | string;
 
 export interface ForensicFinding {
   schema_version: '1.0.0';
@@ -58,14 +69,16 @@ export interface ForensicFinding {
   classification: FindingClassification;
   score?: number;
   score_semantics: string;
-  calibration_status: 'calibrated' | 'illustrative_benchmark' | 'uncalibrated_heuristic';
+  calibration_status: 'calibrated' | 'illustrative_benchmark' | 'uncalibrated_heuristic' | string;
   media_location: MediaLocation;
   supporting_observations: string[];
   explanation: string;
   limitations: string;
-  review_status: 'unreviewed' | 'analyst_corroborated' | 'analyst_dismissed';
+  method_reliability?: string;
+  review_status: 'unreviewed' | 'analyst_corroborated' | 'analyst_dismissed' | string;
   analyst_notes?: string;
   created_at: string;
+  [key: string]: any;
 }
 
 export interface Case {

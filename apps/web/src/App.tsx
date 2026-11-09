@@ -17,7 +17,9 @@ import {
   fetchEvidence, 
   uploadEvidence, 
   triggerAnalysis, 
-  fetchFindings 
+  fetchFindings,
+  fetchJob,
+  reevaluateEvidenceAssessment
 } from './services/api';
 import { Loader2 } from 'lucide-react';
 
@@ -196,18 +198,45 @@ export const App: React.FC = () => {
       const latest = uploadedAssets[0];
       await handleSelectEvidenceAsset(latest);
 
-      // Refresh findings after analysis pipeline starts
-      setTimeout(async () => {
+      // Actively poll and refresh findings & assessment
+      await pollJobAndRefresh(activeCase.case_id, latest.evidence_id);
+    }
+  };
+
+  // Helper: Poll background analysis job until complete, then refresh findings and assessment
+  const pollJobAndRefresh = async (caseId: string, evidenceId: string, jobId?: string) => {
+    if (jobId) {
+      for (let i = 0; i < 20; i++) {
+        await new Promise((r) => setTimeout(r, 300));
         try {
-          const updatedFindings = await fetchFindings(activeCase.case_id, latest.evidence_id);
-          setFindings(updatedFindings);
-          if (updatedFindings.length > 0) {
-            setSelectedFindingId(updatedFindings[0].finding_id);
+          const j = await fetchJob(jobId);
+          if (j.status === 'completed' || j.status === 'failed') {
+            break;
           }
-        } catch (e) {
-          console.error('Failed to refresh findings after upload:', e);
+        } catch {
+          // continue polling
         }
-      }, 1500);
+      }
+    } else {
+      await new Promise((r) => setTimeout(r, 600));
+    }
+
+    // Refresh findings
+    try {
+      const updatedFindings = await fetchFindings(caseId, evidenceId);
+      setFindings(updatedFindings);
+      if (updatedFindings.length > 0) {
+        setSelectedFindingId((prev) => prev || updatedFindings[0].finding_id);
+      }
+    } catch (e) {
+      console.error('Failed to refresh findings:', e);
+    }
+
+    // Reevaluate and refresh assessment verdict
+    try {
+      await reevaluateEvidenceAssessment(evidenceId);
+    } catch (e) {
+      console.error('Failed to refresh assessment verdict:', e);
     }
   };
 
@@ -218,28 +247,20 @@ export const App: React.FC = () => {
     setEvidenceList((prev) => [newEvidence, ...prev]);
     await handleSelectEvidenceAsset(newEvidence);
 
-    setTimeout(async () => {
-      try {
-        const updatedFindings = await fetchFindings(activeCase.case_id, newEvidence.evidence_id);
-        setFindings(updatedFindings);
-        if (updatedFindings.length > 0) {
-          setSelectedFindingId(updatedFindings[0].finding_id);
-        }
-      } catch (e) {
-        console.error('Failed to refresh findings after upload:', e);
-      }
-    }, 1500);
+    // Actively poll and refresh findings & assessment
+    await pollJobAndRefresh(activeCase.case_id, newEvidence.evidence_id);
   };
 
   // Trigger analysis pipeline
   const handleTriggerAnalysis = async (pipelines: string[]) => {
     if (!activeEvidence || !activeCase) return;
-    await triggerAnalysis(activeEvidence.evidence_id, pipelines);
-
-    setTimeout(async () => {
-      const updatedFindings = await fetchFindings(activeCase.case_id, activeEvidence.evidence_id);
-      setFindings(updatedFindings);
-    }, 1200);
+    try {
+      const job = await triggerAnalysis(activeEvidence.evidence_id, pipelines);
+      await pollJobAndRefresh(activeCase.case_id, activeEvidence.evidence_id, job?.job_id);
+    } catch (err) {
+      console.error('Trigger analysis failed:', err);
+      await pollJobAndRefresh(activeCase.case_id, activeEvidence.evidence_id);
+    }
   };
 
   const handleSelectEvidenceById = async (evidenceId: string) => {

@@ -1,4 +1,5 @@
 import struct
+import uuid
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 from spectrix.pipelines.base import BasePipeline
@@ -131,7 +132,7 @@ class VideoContainerPipeline(BasePipeline):
         encoder_detected = "Lavf / ffmpeg secondary muxer" if has_ffmpeg_sig else "Camera standard ISOBMFF muxer"
         
         findings.append({
-            "finding_id": f"FND-VID-CONT-{evidence_id[:8]}",
+            "finding_id": f"FND-VID-CONT-{uuid.uuid4().hex[:6]}",
             "modality": "video",
             "finding_type": "container_provenance_inspection",
             "method_id": "isobmff_box_parser_v1.0",
@@ -169,7 +170,7 @@ class VideoContainerPipeline(BasePipeline):
 
         # Finding 2: Video Encoding Profile & QP Variance (VID-FND-003)
         findings.append({
-            "finding_id": f"FND-VID-QP-{evidence_id[:8]}",
+            "finding_id": f"FND-VID-QP-{uuid.uuid4().hex[:6]}",
             "modality": "video",
             "finding_type": "encoding_profile_transition",
             "method_id": "macroblock_qp_variance_analysis",

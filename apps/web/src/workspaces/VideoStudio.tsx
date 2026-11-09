@@ -914,7 +914,7 @@ export const VideoStudio: React.FC<VideoStudioProps> = ({
                     onClick={(e) => {
                       e.stopPropagation();
                       seekTo(74.6);
-                      const f = videoFindings.find(vf => vf.finding_type === 'temporal_boundary_inconsistency');
+                      const f = videoFindings.find(vf => vf.finding_type === 'temporal_boundary_inconsistency' || vf.finding_id.includes('TEMP'));
                       if (f) onSelectFinding(f.finding_id);
                     }}
                     className="absolute left-[43%] w-[3.2%] top-0.5 bottom-0.5 bg-[#f43f5e] text-black rounded-[2px] px-1 flex items-center justify-between text-[8px] font-mono font-bold cursor-pointer hover:brightness-125 shadow"
@@ -927,7 +927,7 @@ export const VideoStudio: React.FC<VideoStudioProps> = ({
                     onClick={(e) => {
                       e.stopPropagation();
                       seekTo(126.0);
-                      const f = videoFindings.find(vf => vf.finding_type === 'encoding_profile_transition');
+                      const f = videoFindings.find(vf => vf.finding_type === 'encoding_profile_transition' || vf.finding_id.includes('QP') || vf.finding_id.includes('CONT'));
                       if (f) onSelectFinding(f.finding_id);
                     }}
                     className="absolute left-[75%] w-[1.5%] top-0.5 bottom-0.5 bg-[#f59e0b] text-black rounded-[2px] text-[8px] font-mono font-bold cursor-pointer hover:brightness-125"
@@ -949,7 +949,7 @@ export const VideoStudio: React.FC<VideoStudioProps> = ({
                     onClick={(e) => {
                       e.stopPropagation();
                       seekTo(103.5);
-                      const f = videoFindings.find(vf => vf.finding_type === 'audio_video_synchronisation_discrepancy');
+                      const f = videoFindings.find(vf => vf.finding_type === 'audio_video_synchronisation_discrepancy' || vf.finding_id.includes('VIS'));
                       if (f) onSelectFinding(f.finding_id);
                     }}
                     className="absolute left-[61%] w-[3%] top-0.5 bottom-0.5 bg-[#f59e0b]/90 text-black rounded-[2px] px-1 flex items-center text-[8px] font-mono font-bold cursor-pointer hover:brightness-125"
@@ -1062,136 +1062,139 @@ export const VideoStudio: React.FC<VideoStudioProps> = ({
             {inspectorTab === 'findings' && (
               <div className="flex flex-col gap-3">
                 {/* Trigger pipelines banner if no findings yet */}
-                {videoFindings.length === 0 && (
-                  <div className="p-3 bg-[#171d29] rounded border border-[#1c2433] text-center">
-                    <p className="text-xs text-[#94a3b8] mb-2">No video pipeline findings registered.</p>
+                {videoFindings.length === 0 ? (
+                  <div className="p-4 bg-[#171d29] rounded border border-[#1c2433] text-center space-y-2">
+                    <p className="text-xs text-[#94a3b8]">No video forensic findings registered for this asset.</p>
+                    <p className="text-[10.5px] text-[#64748b] leading-relaxed">
+                      Execute video analysis pipelines to inspect container integrity, GOP quantization profiles, temporal cadence, and viseme synchronization.
+                    </p>
                     <button
                       onClick={() => onTriggerAnalysis(['video_container_analysis', 'video_temporal_cadence', 'video_viseme_sync'])}
-                      className="px-3 py-1 bg-[#35c6a0] text-[#00382a] rounded text-xs font-semibold hover:bg-[#20e3b2]"
+                      className="mt-2 px-3 py-1.5 bg-[#35c6a0] hover:bg-[#20e3b2] text-[#00382a] rounded text-xs font-semibold transition cursor-pointer"
                     >
                       Run Video Forensic Pipelines
                     </button>
                   </div>
+                ) : (
+                  <>
+                    {videoFindings.map((f) => {
+                      const isSelected = selectedFindingId === f.finding_id;
+                      const startTime = typeof f.media_location?.start_time === 'number'
+                        ? f.media_location.start_time
+                        : (typeof f.media_location?.target_frame === 'number' ? f.media_location.target_frame / fps : null);
+                      const smpte = f.media_location?.smpte_start
+                        ? `${f.media_location.smpte_start}${f.media_location.smpte_end ? ` – ${f.media_location.smpte_end}` : ''}`
+                        : (startTime !== null ? formatSMPTE(startTime) : null);
+
+                      const isSuspicious = f.classification === 'manipulation_indicator' || f.classification === 'ai_generated_indicator';
+                      const isAnomaly = f.classification === 'metadata_anomaly' || f.classification === 'compression_anomaly';
+
+                      const badgeColorClass = isSuspicious
+                        ? 'bg-[#f43f5e]/20 border-[#f43f5e]/50 text-[#f43f5e]'
+                        : isAnomaly
+                        ? 'bg-[#f59e0b]/20 border-[#f59e0b]/50 text-[#f59e0b]'
+                        : 'bg-[#38bdf8]/20 border-[#38bdf8]/50 text-[#38bdf8]';
+
+                      const cardBorderClass = isSelected
+                        ? (isSuspicious ? 'border-[#f43f5e] ring-1 ring-[#f43f5e]/50' : 'border-[#38bdf8] ring-1 ring-[#38bdf8]/50')
+                        : (isSuspicious ? 'border-[#f43f5e]/30 hover:border-[#f43f5e]' : 'border-[#1c2433] hover:border-[#38bdf8]/40');
+
+                      return (
+                        <div
+                          key={f.finding_id}
+                          onClick={() => {
+                            if (startTime !== null) seekTo(startTime);
+                            onSelectFinding(f.finding_id);
+                          }}
+                          className={`bg-[#171d29] rounded-[4px] border p-2.5 flex flex-col gap-2 relative shadow-lg cursor-pointer transition-all ${cardBorderClass}`}
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <span className={`px-1.5 py-0.5 rounded-[2px] border font-mono text-[9px] font-bold tracking-wide uppercase truncate max-w-[200px] ${badgeColorClass}`}>
+                              {f.classification ? f.classification.replace(/_/g, ' ') : 'FINDING'} // {f.finding_id.slice(-8)}
+                            </span>
+                            {smpte && (
+                              <span className="font-mono text-[10px] text-[#cbd5e1] font-bold shrink-0">
+                                {smpte}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="font-semibold text-[12px] text-white">
+                            {f.finding_type.replace(/_/g, ' ').toUpperCase()}
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-1 bg-[#090d14] p-2 rounded-[3px] border border-[#1c2433] font-mono text-[10px]">
+                            <div>
+                              <div className="text-[#64748b] text-[8.5px]">BENCHMARK SCORE</div>
+                              <div className="text-[#f59e0b] font-bold text-[9.5px]">
+                                {f.score !== undefined && f.score !== null ? `${f.score} (${f.score_semantics || 'raw'})` : 'N/A'}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-[#64748b] text-[8.5px]">MODEL / METHOD</div>
+                              <div className="text-[#e2e8f0] font-semibold text-[9.5px] truncate" title={f.model_id || f.method_id}>
+                                {f.model_id || f.method_id}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-[#64748b] text-[8.5px]">CALIBRATION</div>
+                              <div className="text-[#cbd5e1] text-[9.5px] uppercase">
+                                {f.calibration_status || 'uncalibrated'}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-[#64748b] text-[8.5px]">RELIABILITY</div>
+                              <div className="text-[#38bdf8] font-semibold text-[9.5px] capitalize">
+                                {f.method_reliability || 'indicative'}
+                              </div>
+                            </div>
+                          </div>
+
+                          <p className="text-[11px] text-[#94a3b8] leading-relaxed">
+                            {f.explanation}
+                          </p>
+
+                          {f.limitations && (
+                            <div className="p-1.5 bg-[#090d14] rounded-[3px] border border-[#1c2433] flex items-start gap-1 font-mono text-[8.5px] text-[#64748b]">
+                              <Info className="w-3 h-3 text-[#f59e0b] shrink-0 mt-0.5" />
+                              <span>{f.limitations}</span>
+                            </div>
+                          )}
+
+                          <div className="flex items-center justify-between pt-0.5">
+                            {startTime !== null ? (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  seekTo(startTime);
+                                  onSelectFinding(f.finding_id);
+                                }}
+                                className="h-5 px-2 bg-[#1f2737] hover:bg-[#353942] rounded-[3px] border border-[#1c2433] text-[10px] font-mono text-white flex items-center gap-1 transition-colors cursor-pointer"
+                              >
+                                <span>Jump to TC ({smpte || `${startTime.toFixed(2)}s`})</span>
+                              </button>
+                            ) : <div />}
+                            <span className={`text-[9px] font-mono uppercase ${isSuspicious ? 'text-[#f43f5e]' : 'text-[#38bdf8]'}`}>
+                              {isSelected ? 'Active Selection' : 'Flagged'}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    <div className="pt-2 border-t border-[#1c2433] flex items-center justify-between">
+                      <span className="text-[10px] text-[#64748b] font-mono">
+                        {videoFindings.length} finding{videoFindings.length === 1 ? '' : 's'} recorded
+                      </span>
+                      <button
+                        onClick={() => onTriggerAnalysis(['video_container_analysis', 'video_temporal_cadence', 'video_viseme_sync'])}
+                        className="px-2.5 py-1 bg-[#1f2737] hover:bg-[#353942] border border-[#1c2433] text-[10.5px] text-[#35c6a0] rounded transition cursor-pointer"
+                      >
+                        Re-run Video Pipelines
+                      </button>
+                    </div>
+                  </>
                 )}
-
-                {/* Finding 1: Mandibular Boundary Discontinuity */}
-                <div
-                  onClick={() => {
-                    seekTo(74.6);
-                    onSelectFinding('FND-VID-TEMP');
-                  }}
-                  className={`bg-[#171d29] rounded-[4px] border p-2.5 flex flex-col gap-2 relative shadow-lg cursor-pointer transition-all ${
-                    selectedFindingId === 'FND-VID-TEMP' || selectedFindingId?.includes('TEMP')
-                      ? 'border-[#f43f5e] ring-1 ring-[#f43f5e]/50'
-                      : 'border-[#f43f5e]/40 hover:border-[#f43f5e]'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="px-1.5 py-0.5 rounded-[2px] bg-[#f43f5e]/20 border border-[#f43f5e]/50 text-[#f43f5e] font-mono text-[9px] font-bold tracking-wide uppercase">
-                      ILLUSTRATIVE MODEL OUTPUT // VID-FND-001
-                    </span>
-                    <span className="font-mono text-[10px] text-[#f43f5e] font-bold">00:01:12 – 00:01:15</span>
-                  </div>
-                  <div className="font-semibold text-[12.5px] text-white">
-                    Potential temporal boundary inconsistency
-                  </div>
-                  <div className="grid grid-cols-2 gap-1 bg-[#090d14] p-2 rounded-[3px] border border-[#1c2433] font-mono text-[10px]">
-                    <div>
-                      <div className="text-[#64748b] text-[8.5px]">ILLUSTRATIVE SCORE</div>
-                      <div className="text-[#f43f5e] font-bold text-[9.5px]">Non-calibrated LR ~ 10^3.6</div>
-                    </div>
-                    <div>
-                      <div className="text-[#64748b] text-[8.5px]">MODEL STACK</div>
-                      <div className="text-[#e2e8f0] font-semibold text-[9.5px]">TemporalFace_v2.4</div>
-                    </div>
-                    <div>
-                      <div className="text-[#64748b] text-[8.5px]">TIME INTERVAL</div>
-                      <div className="text-[#cbd5e1] text-[9.5px]">FRM 2158–2248</div>
-                    </div>
-                    <div>
-                      <div className="text-[#64748b] text-[8.5px]">RESIDUAL VECTOR</div>
-                      <div className="text-[#f59e0b] font-semibold text-[9.5px]">1.42 px Jaw Discontinuity</div>
-                    </div>
-                  </div>
-                  <p className="text-[11px] text-[#94a3b8] leading-relaxed">
-                    Inter-frame boundary discontinuity and phase drift observed along mandibular region during articulation.
-                  </p>
-                  <div className="p-1.5 bg-[#090d14] rounded-[3px] border border-[#1c2433] flex items-start gap-1 font-mono text-[8.5px] text-[#64748b]">
-                    <Info className="w-3 h-3 text-[#f59e0b] shrink-0 mt-0.5" />
-                    <span>Illustrative model output; benchmark reference only. Does not establish legal proof of synthetic generation.</span>
-                  </div>
-                  <div className="flex items-center justify-between pt-0.5">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); seekTo(74.6); }}
-                      className="h-5 px-2 bg-[#1f2737] hover:bg-[#353942] rounded-[3px] border border-[#1c2433] text-[10px] font-mono text-white flex items-center gap-1 transition-colors"
-                    >
-                      <span>Jump to TC (00:01:14:18)</span>
-                    </button>
-                    <span className="text-[9px] font-mono text-[#f43f5e] uppercase">Flagged for Dossier</span>
-                  </div>
-                </div>
-
-                {/* Finding 2: Viseme Audio/Video Desynchronization */}
-                <div
-                  onClick={() => {
-                    seekTo(103.5);
-                    onSelectFinding('FND-VID-VIS');
-                  }}
-                  className={`bg-[#171d29] rounded-[4px] border p-2.5 flex flex-col gap-2 cursor-pointer transition-all ${
-                    selectedFindingId === 'FND-VID-VIS' || selectedFindingId?.includes('VIS')
-                      ? 'border-[#f59e0b] ring-1 ring-[#f59e0b]/50'
-                      : 'border-[#f59e0b]/40 hover:border-[#f59e0b]'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="px-1.5 py-0.5 rounded-[2px] bg-[#f59e0b]/15 border border-[#f59e0b]/40 text-[#f59e0b] font-mono text-[9px] font-bold uppercase">
-                      ILLUSTRATIVE MODEL OUTPUT // VID-FND-002
-                    </span>
-                    <span className="font-mono text-[10px] text-[#f59e0b] font-bold">00:01:43 – 00:01:46</span>
-                  </div>
-                  <div className="font-semibold text-[12.5px] text-white">
-                    Possible audio-video synchronisation discrepancy
-                  </div>
-                  <div className="grid grid-cols-2 gap-1 bg-[#090d14] p-2 rounded-[3px] border border-[#1c2433] font-mono text-[10px]">
-                    <div>
-                      <div className="text-[#64748b] text-[8.5px]">MODEL STACK</div>
-                      <div className="text-[#e2e8f0] text-[9.5px]">SyncNet_Lite_v1.8</div>
-                    </div>
-                    <div>
-                      <div className="text-[#64748b] text-[8.5px]">MEASURED OFFSET</div>
-                      <div className="text-[#f59e0b] font-bold text-[9.5px]">-180 ms (Audio Lags)</div>
-                    </div>
-                  </div>
-                  <p className="text-[11px] text-[#94a3b8] leading-relaxed">
-                    Acoustic onset of plosive consonant precedes visual lip closure by ~5.4 frames. May indicate re-multiplexing or capture latency.
-                  </p>
-                </div>
-
-                {/* Finding 3: Encoding Profile Transition */}
-                <div
-                  onClick={() => {
-                    seekTo(126.0);
-                    onSelectFinding('FND-VID-QP');
-                  }}
-                  className={`bg-[#171d29] rounded-[4px] border p-2.5 flex flex-col gap-2 cursor-pointer transition-all ${
-                    selectedFindingId === 'FND-VID-QP' || selectedFindingId?.includes('QP')
-                      ? 'border-[#38bdf8] ring-1 ring-[#38bdf8]/50'
-                      : 'border-[#1c2433] hover:border-[#38bdf8]/40'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="px-1.5 py-0.5 rounded-[2px] bg-[#1f2737] border border-[#1c2433] text-[#38bdf8] font-mono text-[9px] font-bold uppercase">
-                      ILLUSTRATIVE MODEL OUTPUT // VID-FND-003
-                    </span>
-                    <span className="font-mono text-[10px] text-[#64748b] font-bold">Frame 3780 / 00:02:06</span>
-                  </div>
-                  <div className="font-semibold text-[12.5px] text-white">
-                    Encoding-profile transition requiring review
-                  </div>
-                  <p className="text-[11px] text-[#94a3b8] leading-relaxed">
-                    Abrupt QP variance from 18 to 34 across non-scene-cut I-frame boundary (Frame 3780).
-                  </p>
-                </div>
               </div>
             )}
 

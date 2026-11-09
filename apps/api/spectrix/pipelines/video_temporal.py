@@ -1,3 +1,4 @@
+import uuid
 from pathlib import Path
 from typing import List, Dict, Any
 from spectrix.pipelines.base import BasePipeline
@@ -22,7 +23,7 @@ class VideoTemporalPipeline(BasePipeline):
 
         # Temporal Boundary Discontinuity / Mandibular Mesh finding (VID-FND-001)
         findings.append({
-            "finding_id": f"FND-VID-TEMP-{evidence_id[:8]}",
+            "finding_id": f"FND-VID-TEMP-{uuid.uuid4().hex[:6]}",
             "modality": "video",
             "finding_type": "temporal_boundary_inconsistency",
             "method_id": "dense_optical_flow_landmark_tracking_v2",

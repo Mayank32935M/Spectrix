@@ -3,12 +3,14 @@ from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field, ConfigDict
 
 class MediaLocationSchema(BaseModel):
-    bounding_box: Optional[Dict[str, Any]] = None
+    model_config = ConfigDict(extra="allow")
+
+    bounding_box: Optional[Any] = None
     temporal_range: Optional[Dict[str, Any]] = None
     frequency_range: Optional[Dict[str, Any]] = None
 
 class FindingResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, extra="allow")
 
     schema_version: str = "1.0.0"
     finding_id: str
@@ -23,7 +25,7 @@ class FindingResponse(BaseModel):
     score: Optional[float] = None
     score_semantics: str
     calibration_status: str
-    media_location: MediaLocationSchema = Field(default_factory=MediaLocationSchema)
+    media_location: Dict[str, Any] = Field(default_factory=dict)
     supporting_observations: List[str] = []
     explanation: str
     limitations: str

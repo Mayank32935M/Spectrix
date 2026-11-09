@@ -1,4 +1,5 @@
 import struct
+import uuid
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 from spectrix.pipelines.base import BasePipeline
@@ -76,7 +77,7 @@ class AudioSpectralPipeline(BasePipeline):
 
         # Finding 1: Spectral Discontinuity / Splice Boundary (AUD-FND-002)
         findings.append({
-            "finding_id": f"FND-AUD-DISC-{evidence_id[:8]}",
+            "finding_id": f"FND-AUD-DISC-{uuid.uuid4().hex[:6]}",
             "modality": "audio",
             "finding_type": "spectral_discontinuity",
             "method_id": "phase_splice_boundary_stft_v1.4",
@@ -113,7 +114,7 @@ class AudioSpectralPipeline(BasePipeline):
 
         # Finding 2: Background Noise Profile Transition (AUD-FND-003)
         findings.append({
-            "finding_id": f"FND-AUD-NOISE-{evidence_id[:8]}",
+            "finding_id": f"FND-AUD-NOISE-{uuid.uuid4().hex[:6]}",
             "modality": "audio",
             "finding_type": "noise_floor_elevation",
             "method_id": "ambient_noise_profile_integrator_v2",

@@ -1,3 +1,4 @@
+import uuid
 from pathlib import Path
 from typing import List, Dict, Any
 from spectrix.pipelines.base import BasePipeline
@@ -21,7 +22,7 @@ class AudioSyntheticVoicePipeline(BasePipeline):
 
         # Finding 1: Potential Synthetic-Speech Characteristic (AUD-FND-001)
         findings.append({
-            "finding_id": f"FND-AUD-SYNTH-{evidence_id[:8]}",
+            "finding_id": f"FND-AUD-SYNTH-{uuid.uuid4().hex[:6]}",
             "modality": "audio",
             "finding_type": "synthetic_speech_characteristic",
             "method_id": "neural_acoustic_phase_variance_v3",
@@ -61,7 +62,7 @@ class AudioSyntheticVoicePipeline(BasePipeline):
 
         # Finding 2: Potential Speaker-Segmentation Boundary (AUD-FND-004)
         findings.append({
-            "finding_id": f"FND-AUD-SPK-{evidence_id[:8]}",
+            "finding_id": f"FND-AUD-SPK-{uuid.uuid4().hex[:6]}",
             "modality": "audio",
             "finding_type": "speaker_diarization_transition",
             "method_id": "xvector_diarization_cluster_v2",

@@ -1,3 +1,4 @@
+import uuid
 from pathlib import Path
 from typing import List, Dict, Any
 from spectrix.pipelines.base import BasePipeline
@@ -21,7 +22,7 @@ class VideoVisemePipeline(BasePipeline):
         findings: List[Dict[str, Any]] = []
 
         findings.append({
-            "finding_id": f"FND-VID-VIS-{evidence_id[:8]}",
+            "finding_id": f"FND-VID-VIS-{uuid.uuid4().hex[:6]}",
             "modality": "video",
             "finding_type": "audio_video_synchronisation_discrepancy",
             "method_id": "cross_modal_lip_phoneme_alignment",

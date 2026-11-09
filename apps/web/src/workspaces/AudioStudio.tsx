@@ -817,7 +817,8 @@ export const AudioStudio: React.FC<AudioStudioProps> = ({
                         onClick={(e) => {
                           e.stopPropagation();
                           seekTo(48.12);
-                          onSelectFinding('FND-AUD-SYNTH');
+                          const f = audioFindings.find(af => af.finding_type === 'synthetic_voice_detection' || af.finding_id.includes('SYNTH'));
+                          onSelectFinding(f ? f.finding_id : 'FND-AUD-SYNTH');
                         }}
                         className="absolute left-[28.6%] top-3 z-20 flex flex-col items-start cursor-pointer hover:brightness-125"
                       >
@@ -836,7 +837,8 @@ export const AudioStudio: React.FC<AudioStudioProps> = ({
                         onClick={(e) => {
                           e.stopPropagation();
                           seekTo(81.0);
-                          onSelectFinding('FND-AUD-DISC');
+                          const f = audioFindings.find(af => af.finding_type === 'phase_splice_boundary' || af.finding_id.includes('DISC'));
+                          onSelectFinding(f ? f.finding_id : 'FND-AUD-DISC');
                         }}
                         className="absolute left-[48.2%] top-6 z-20 flex flex-col items-start cursor-pointer hover:brightness-125"
                       >
@@ -852,7 +854,8 @@ export const AudioStudio: React.FC<AudioStudioProps> = ({
                         onClick={(e) => {
                           e.stopPropagation();
                           seekTo(123.4);
-                          onSelectFinding('FND-AUD-NOISE');
+                          const f = audioFindings.find(af => af.finding_type === 'noise_profile_discontinuity' || af.finding_id.includes('NOISE'));
+                          onSelectFinding(f ? f.finding_id : 'FND-AUD-NOISE');
                         }}
                         className="absolute left-[73.5%] bottom-5 z-20 flex flex-col items-start cursor-pointer hover:brightness-125"
                       >
@@ -1037,161 +1040,138 @@ export const AudioStudio: React.FC<AudioStudioProps> = ({
             {/* FINDINGS TAB */}
             {inspectorTab === 'findings' && (
               <div className="space-y-2.5">
-                {audioFindings.length === 0 && (
-                  <div className="p-3 bg-[#171d29] rounded border border-[#1c2433] text-center">
-                    <p className="text-xs text-[#94a3b8] mb-2">No audio pipeline findings registered.</p>
+                {audioFindings.length === 0 ? (
+                  <div className="p-4 bg-[#171d29] rounded border border-[#1c2433] text-center space-y-2">
+                    <p className="text-xs text-[#94a3b8]">No audio forensic findings registered for this asset.</p>
+                    <p className="text-[10.5px] text-[#64748b] leading-relaxed">
+                      Execute audio analysis pipelines to detect synthetic voice artifacts, spectral phase discontinuities, and background noise profile shifts.
+                    </p>
                     <button
                       onClick={() => onTriggerAnalysis(['audio_spectral_analysis', 'audio_synthetic_voice'])}
-                      className="px-3 py-1 bg-[#35c6a0] text-[#00382a] rounded text-xs font-semibold hover:bg-[#20e3b2]"
+                      className="mt-2 px-3 py-1.5 bg-[#35c6a0] hover:bg-[#20e3b2] text-[#00382a] rounded text-xs font-semibold transition cursor-pointer"
                     >
                       Run Audio Forensic Pipelines
                     </button>
                   </div>
+                ) : (
+                  <>
+                    {audioFindings.map((f) => {
+                      const isSelected = selectedFindingId === f.finding_id;
+                      const startTime = typeof f.media_location?.start_time === 'number'
+                        ? f.media_location.start_time
+                        : null;
+                      const endTime = typeof f.media_location?.end_time === 'number'
+                        ? f.media_location.end_time
+                        : null;
+                      const timeLabel = f.media_location?.smpte_start
+                        ? `${f.media_location.smpte_start}${f.media_location.smpte_end ? ` – ${f.media_location.smpte_end}` : ''}`
+                        : (startTime !== null ? `${startTime.toFixed(2)}s${endTime !== null ? ` – ${endTime.toFixed(2)}s` : ''}` : null);
+
+                      const isSuspicious = f.classification === 'manipulation_indicator' || f.classification === 'ai_generated_indicator';
+                      const isAnomaly = f.classification === 'metadata_anomaly' || f.classification === 'compression_anomaly';
+
+                      const badgeColorClass = isSuspicious
+                        ? 'text-[#f43f5e] bg-[#f43f5e]/10 border-[#f43f5e]/30'
+                        : isAnomaly
+                        ? 'text-[#f59e0b] bg-[#f59e0b]/10 border-[#f59e0b]/30'
+                        : 'text-[#38bdf8] bg-[#38bdf8]/10 border-[#38bdf8]/30';
+
+                      const cardBorderClass = isSelected
+                        ? (isSuspicious ? 'border-[#f43f5e] ring-1 ring-[#f43f5e]/50' : 'border-[#38bdf8] ring-1 ring-[#38bdf8]/50')
+                        : (isSuspicious ? 'border-[#f43f5e]/40 hover:border-[#f43f5e]' : 'border-[#1c2433] hover:border-[#38bdf8]/50');
+
+                      return (
+                        <div
+                          key={f.finding_id}
+                          onClick={() => {
+                            if (startTime !== null) seekTo(startTime);
+                            onSelectFinding(f.finding_id);
+                          }}
+                          className={`p-2.5 rounded bg-[#171d29] border shadow-sm transition-all cursor-pointer ${cardBorderClass}`}
+                        >
+                          <div className="flex items-start justify-between gap-1 mb-1.5">
+                            <span className={`font-mono text-[9px] uppercase tracking-wider font-bold px-1 py-0.5 rounded border truncate max-w-[200px] ${badgeColorClass}`}>
+                              {f.classification ? f.classification.replace(/_/g, ' ') : 'FINDING'} // {f.finding_id.slice(-8)}
+                            </span>
+                            {timeLabel && (
+                              <span className="px-1.5 py-0.5 rounded bg-[#090d14] border border-[#1c2433] text-[#cbd5e1] font-mono text-[9px] font-bold shrink-0">
+                                {timeLabel}
+                              </span>
+                            )}
+                          </div>
+
+                          <h4 className="font-semibold text-xs text-white mb-1">
+                            {f.finding_type.replace(/_/g, ' ').toUpperCase()}
+                          </h4>
+
+                          <div className="space-y-1 my-2 font-mono text-[10px] bg-[#090d14] p-2 rounded border border-[#1c2433]">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[#64748b]">Model / Method:</span>
+                              <span className="text-white font-semibold truncate max-w-[170px]" title={f.model_id || f.method_id}>
+                                {f.model_id || f.method_id}
+                              </span>
+                            </div>
+                            {f.score !== undefined && f.score !== null && (
+                              <div className="flex items-center justify-between">
+                                <span className="text-[#64748b]">Score:</span>
+                                <span className="text-[#f59e0b] font-semibold">{f.score} ({f.score_semantics || 'calibrated'})</span>
+                              </div>
+                            )}
+                            <div className="flex items-center justify-between">
+                              <span className="text-[#64748b]">Calibration:</span>
+                              <span className="text-[#cbd5e1] uppercase">{f.calibration_status || 'uncalibrated'}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-[#64748b]">Reliability:</span>
+                              <span className="text-[#38bdf8] capitalize">{f.method_reliability || 'indicative'}</span>
+                            </div>
+                          </div>
+
+                          <p className="text-[11px] text-[#94a3b8] leading-relaxed mb-2 font-sans">
+                            {f.explanation}
+                          </p>
+
+                          {f.limitations && (
+                            <div className="p-1.5 bg-[#090d14] border border-[#1c2433] rounded mb-2 flex items-start gap-1 font-mono text-[8.5px] text-[#64748b]">
+                              <Info className="w-3 h-3 text-[#f59e0b] shrink-0 mt-0.5" />
+                              <span>{f.limitations}</span>
+                            </div>
+                          )}
+
+                          <div className="flex items-center justify-between">
+                            {startTime !== null ? (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  seekTo(startTime);
+                                  onSelectFinding(f.finding_id);
+                                }}
+                                className="h-6 px-2.5 flex items-center justify-center gap-1 rounded bg-[#1f2737] hover:bg-[#353942] border border-[#1c2433] text-white font-mono text-[10px] transition-colors cursor-pointer"
+                              >
+                                <span>Jump to TC ({startTime.toFixed(2)}s)</span>
+                              </button>
+                            ) : <div />}
+                            <span className={`text-[9px] font-mono uppercase ${isSuspicious ? 'text-[#f43f5e]' : 'text-[#38bdf8]'}`}>
+                              {isSelected ? 'Active Selection' : 'Flagged'}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    <div className="pt-2 border-t border-[#1c2433] flex items-center justify-between">
+                      <span className="text-[10px] text-[#64748b] font-mono">
+                        {audioFindings.length} finding{audioFindings.length === 1 ? '' : 's'} recorded
+                      </span>
+                      <button
+                        onClick={() => onTriggerAnalysis(['audio_spectral_analysis', 'audio_synthetic_voice'])}
+                        className="px-2.5 py-1 bg-[#1f2737] hover:bg-[#353942] border border-[#1c2433] text-[10.5px] text-[#35c6a0] rounded transition cursor-pointer"
+                      >
+                        Re-run Audio Pipelines
+                      </button>
+                    </div>
+                  </>
                 )}
-
-                {/* Finding 1: AUD-FND-001 (Synthetic Voice) */}
-                <div
-                  onClick={() => {
-                    seekTo(48.12);
-                    onSelectFinding('FND-AUD-SYNTH');
-                  }}
-                  className={`p-2.5 rounded bg-[#171d29] border shadow-sm transition-all cursor-pointer ${
-                    selectedFindingId === 'FND-AUD-SYNTH' || selectedFindingId?.includes('SYNTH')
-                      ? 'border-[#f43f5e] ring-1 ring-[#f43f5e]/50'
-                      : 'border-[#f43f5e]/60 hover:border-[#f43f5e]'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-1 mb-1.5">
-                    <span className="font-mono text-[9px] uppercase tracking-wider text-[#f43f5e] font-bold">
-                      MODEL OUTPUT // AUD-FND-001
-                    </span>
-                    <span className="px-1.5 py-0.5 rounded bg-[#f43f5e]/10 text-[#f43f5e] border border-[#f43f5e]/30 font-mono text-[9px] font-bold">
-                      00:00:48.120 - 00:00:55.340
-                    </span>
-                  </div>
-                  <h4 className="font-semibold text-xs text-white mb-1">
-                    Potential synthetic-speech characteristic
-                  </h4>
-                  <div className="space-y-1 my-2 font-mono text-[10px] bg-[#090d14] p-2 rounded border border-[#1c2433]">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[#64748b]">Model:</span>
-                      <span className="text-white font-semibold">NeuralAcoustic_v3.2</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[#64748b]">LR Estimate:</span>
-                      <span className="text-[#f59e0b] font-semibold">~ 10^3.4 (Non-calibrated)</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[#64748b]">Spectral Span:</span>
-                      <span className="text-[#38bdf8]">3,800 Hz – 7,400 Hz</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[#64748b]">Phase Variance:</span>
-                      <span className="text-[#f43f5e] font-semibold">σ² = 0.0018 (Unnatural)</span>
-                    </div>
-                  </div>
-                  <p className="text-[11px] text-[#94a3b8] leading-relaxed mb-2 font-sans">
-                    High-frequency harmonic regularity and unnatural formant trajectory observed during continuous vowel articulation. Possible neural TTS / vocoder artifact.
-                  </p>
-                  <div className="p-1.5 bg-[#090d14] border border-[#1c2433] rounded mb-2 flex items-start gap-1 font-mono text-[8.5px] text-[#64748b]">
-                    <Info className="w-3 h-3 text-[#f59e0b] shrink-0 mt-0.5" />
-                    <span>Illustrative model output; benchmark reference only. Does not establish legal proof of voice synthesis or cloning.</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); seekTo(48.12); }}
-                      className="flex-1 h-6 flex items-center justify-center gap-1 rounded bg-[#1f2737] hover:bg-[#353942] border border-[#1c2433] text-white font-mono text-[10px] transition-colors"
-                    >
-                      <span>Jump to TC (48.12s)</span>
-                    </button>
-                    <span className="text-[9px] font-mono text-[#f43f5e] uppercase">Flagged</span>
-                  </div>
-                </div>
-
-                {/* Finding 2: AUD-FND-002 (Splice Boundary) */}
-                <div
-                  onClick={() => {
-                    seekTo(81.0);
-                    onSelectFinding('FND-AUD-DISC');
-                  }}
-                  className={`p-2.5 rounded bg-[#171d29] border shadow-sm transition-all cursor-pointer ${
-                    selectedFindingId === 'FND-AUD-DISC' || selectedFindingId?.includes('DISC')
-                      ? 'border-[#f43f5e] ring-1 ring-[#f43f5e]/50'
-                      : 'border-[#1c2433] hover:border-[#f43f5e]/50'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-1 mb-1">
-                    <span className="font-mono text-[9px] uppercase tracking-wider text-[#f43f5e] font-bold">
-                      MODEL OUTPUT // AUD-FND-002
-                    </span>
-                    <span className="px-1.5 py-0.2 rounded bg-[#090d14] border border-[#1c2433] text-[#64748b] font-mono text-[9px]">
-                      00:01:21.000 – 00:01:24.150
-                    </span>
-                  </div>
-                  <h4 className="font-semibold text-xs text-white mb-1">
-                    Spectral discontinuity requiring review
-                  </h4>
-                  <div className="font-mono text-[10px] text-[#94a3b8] space-y-0.5">
-                    <div>Model: <span className="text-white">PhaseSplice_Det_v1.4</span></div>
-                    <div>Offset: <span className="text-[#f43f5e] font-semibold">Abrupt phase shift across frame boundary</span></div>
-                  </div>
-                </div>
-
-                {/* Finding 3: AUD-FND-003 (Noise Floor) */}
-                <div
-                  onClick={() => {
-                    seekTo(123.4);
-                    onSelectFinding('FND-AUD-NOISE');
-                  }}
-                  className={`p-2.5 rounded bg-[#171d29] border shadow-sm transition-all cursor-pointer ${
-                    selectedFindingId === 'FND-AUD-NOISE' || selectedFindingId?.includes('NOISE')
-                      ? 'border-[#f59e0b] ring-1 ring-[#f59e0b]/50'
-                      : 'border-[#1c2433] hover:border-[#f59e0b]/50'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-1 mb-1">
-                    <span className="font-mono text-[9px] uppercase tracking-wider text-[#f59e0b] font-bold">
-                      MODEL OUTPUT // AUD-FND-003
-                    </span>
-                    <span className="px-1.5 py-0.2 rounded bg-[#090d14] border border-[#1c2433] text-[#64748b] font-mono text-[9px]">
-                      00:02:03.400 – 00:02:08.000
-                    </span>
-                  </div>
-                  <h4 className="font-semibold text-xs text-white mb-1">
-                    Background-noise profile transition
-                  </h4>
-                  <div className="font-mono text-[10px] text-[#94a3b8]">
-                    Noise elevation of <strong className="text-[#f59e0b]">+4.2 dB</strong> detected across 100Hz-1200Hz.
-                  </div>
-                </div>
-
-                {/* Finding 4: AUD-FND-004 (Speaker Diarization) */}
-                <div
-                  onClick={() => {
-                    seekTo(137.5);
-                    onSelectFinding('FND-AUD-SPK');
-                  }}
-                  className={`p-2.5 rounded bg-[#171d29] border shadow-sm transition-all cursor-pointer ${
-                    selectedFindingId === 'FND-AUD-SPK' || selectedFindingId?.includes('SPK')
-                      ? 'border-[#a855f7] ring-1 ring-[#a855f7]/50'
-                      : 'border-[#1c2433] hover:border-[#a855f7]/50'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-1 mb-1">
-                    <span className="font-mono text-[9px] uppercase tracking-wider text-[#a855f7] font-bold">
-                      MODEL OUTPUT // AUD-FND-004
-                    </span>
-                    <span className="px-1.5 py-0.2 rounded bg-[#090d14] border border-[#1c2433] text-[#64748b] font-mono text-[9px]">
-                      00:02:17.500 – 00:02:23.000
-                    </span>
-                  </div>
-                  <h4 className="font-semibold text-xs text-white mb-1">
-                    Potential speaker-segmentation boundary
-                  </h4>
-                  <div className="font-mono text-[10px] text-[#94a3b8]">
-                    Cluster overlap between SPK-01 and unidentified acoustic source.
-                  </div>
-                </div>
               </div>
             )}
 

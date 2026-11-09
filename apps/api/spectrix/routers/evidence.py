@@ -100,13 +100,20 @@ async def upload_evidence(
     )
     db.add(custody_event)
 
-    # Automatically queue baseline analysis job
+    # Automatically queue baseline analysis job matching modality
+    if modality == "video":
+        baseline_pipelines = ["video_container_analysis", "video_temporal_cadence", "video_viseme_sync"]
+    elif modality == "audio":
+        baseline_pipelines = ["audio_spectral_analysis", "audio_synthetic_voice"]
+    else:
+        baseline_pipelines = ["ela_compression", "metadata_inspection", "noise_analysis"]
+
     job_id = f"JOB-{uuid.uuid4().hex[:8]}"
     job = AnalysisJob(
         job_id=job_id,
         evidence_id=evidence_id,
         case_id=case.case_id,
-        pipelines=["ela_compression", "metadata_inspection", "noise_analysis"],
+        pipelines=baseline_pipelines,
         status="queued",
         progress_percent=0,
         log_messages=["Job queued automatically upon ingestion"]
